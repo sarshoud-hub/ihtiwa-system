@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ihtiwa-app" content="plan"><meta name="robots" content="noindex,nofollow"><link rel="icon" href="logo.png"><style>html,body{margin:0;padding:0}body{font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><script src="runtime.js"></script></head><body>
 <title>نظام إدارة احتواء</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
@@ -335,9 +335,10 @@ label.f.wide { grid-column: 1 / -1; }
     </div>
     <div class="side-sec side-links">
       <span class="side-lab">صفحات مرتبطة</span>
-      <a href="https://claude.ai/artifact/QQBaG3zYYFyuoke8JbKDsg" target="_blank" rel="noopener">موازنة 2027 <span aria-hidden="true">↗</span></a>
-      <a href="https://claude.ai/artifact/JnNtAAvHkG8Kpmhnv5wdDK" target="_blank" rel="noopener">هيكل اللجان <span aria-hidden="true">↗</span></a>
-      <a href="https://claude.ai/artifact/R1P6RJPxdNRNgQerKbC1t7" target="_blank" rel="noopener">نظام التسجيل <span aria-hidden="true">↗</span></a>
+      <a href="budget.html" data-iht-admin hidden>موازنة 2027</a>
+      <a href="committees.html">هيكل اللجان</a>
+      <a href="registration.html">نظام التسجيل</a>
+      <a href="admin.html" data-iht-admin hidden>الإعدادات والصلاحيات</a>
     </div>
   </aside>
 <main class="app" id="app">
@@ -471,7 +472,7 @@ label.f.wide { grid-column: 1 / -1; }
   <!-- COMMITTEES -->
   <section class="view" id="v-com" hidden>
     <div class="card">
-      <div class="head"><h2>اللجان</h2><div class="controls"><a class="btn sm" href="https://claude.ai/artifact/JnNtAAvHkG8Kpmhnv5wdDK" target="_blank" rel="noopener">الهيكل والقادة وقوائم الأعضاء ↗</a><button class="btn sm primary edit-only" type="button" data-add="committee">+ لجنة</button></div></div>
+      <div class="head"><h2>اللجان</h2><div class="controls"><a class="btn sm" href="committees.html">الهيكل والقادة وقوائم الأعضاء</a><button class="btn sm primary edit-only" type="button" data-add="committee">+ لجنة</button></div></div>
       <p class="note" id="com-note"></p>
       <div class="cgrid" id="com-grid"></div>
     </div>
@@ -803,7 +804,7 @@ function renderOps() {
     const c1 = el('td'); const nb = el('button', t.title, 'linkish'); nb.type = 'button'; nb.addEventListener('click', () => openForm('task', t)); c1.append(nb);
     const c2 = el('td'); if (p) { const pb = el('button', null, 'linkish'); pb.type = 'button'; pb.append(secTag(p.section)); pb.firstChild.lastChild.textContent = p.name; pb.addEventListener('click', () => openProject(p.id)); c2.append(pb); } else c2.textContent = '—';
     const cs = el('td');
-    if (S.canEdit) { const sel = el('select'); sel.setAttribute('aria-label', 'حالة ' + t.title); T_STATUS.forEach((x) => sel.append(new Option(x))); sel.value = t.status || 'لم تبدأ'; sel.addEventListener('change', () => save('tasks', t.id, { ...strip(t), status: sel.value }, 'حُدّثت الحالة.')); cs.append(sel); }
+    if (S.canEdit || canStatus(t)) { const sel = el('select'); sel.setAttribute('aria-label', 'حالة ' + t.title); T_STATUS.forEach((x) => sel.append(new Option(x))); sel.value = t.status || 'لم تبدأ'; sel.addEventListener('change', () => save('tasks', t.id, { ...strip(t), status: sel.value }, 'حُدّثت الحالة.')); cs.append(sel); }
     else cs.append(pill(t.status || 'لم تبدأ', tTone(t.status)));
     if (isLate(t)) cs.append(' ', pill('متأخرة', 'bad'));
     const ce = el('td', null, 'edit-only'); if (S.canEdit) { const eb = el('button', 'تعديل', 'btn sm'); eb.type = 'button'; eb.addEventListener('click', () => openForm('task', t)); ce.append(eb); }
@@ -1126,6 +1127,7 @@ function openForm(kind, doc, preset) {
   setTimeout(() => { const f = m.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])') || cn; f.focus(); }, 0);
 }
 function errText(e) { const c = e && e.code; if (c === 'invalid_argument') return 'لا تملك صلاحية التعديل، أو أن البيانات غير صالحة.'; if (c === 'quota_exceeded') return 'امتلأت سعة قاعدة البيانات. احذف عناصر قديمة ثم أعد المحاولة.'; return 'تعذر الحفظ. تحقق من الاتصال وأعد المحاولة.'; }
+function canStatus(t) { const I = window.IHT; return !!(I && I.role === 'leader' && t && (I.names || []).includes(t.committee)); }
 async function save(col, id, data, okMsg) {
   try { await S.db.collection(col).doc(id).set(data); say(okMsg); return true; }
   catch (e) { if (e && e.code === 'unavailable') { try { await new Promise((r) => setTimeout(r, 600 + Math.random() * 600)); await S.db.collection(col).doc(id).set(data); say(okMsg); return true; } catch (e2) { say(errText(e2), true); return false; } } say(errText(e), true); return false; }
@@ -1272,11 +1274,12 @@ let rq = 0; const schedule = () => { if (rq) return; rq = requestAnimationFrame(
   if (SEC[h]) { S.projSec = h; setTab('projects'); }
   applyEdit(); renderAll();
   $('home-kpis').replaceChildren(el('div', 'جاري تحميل الخطة…', 'note'));
-  if (!window.claude || !window.claude.use) { say('هذه الصفحة تعمل داخل Claude فقط، حيث تُحفظ الخطة وتُشارك مع الفريق.', true); return; }
+  if (!window.claude || !window.claude.use) { say('تعذر تشغيل النظام. أعد فتح الصفحة.', true); return; }
   (async () => {
     const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
     if (!db) { say('تعذر الوصول إلى بيانات الخطة. سجّل الدخول أو اطلب من الإدارة مشاركة الصفحة معك.', true); return; }
     S.db = db; S.canEdit = user ? await user.canEdit() : false;
+    if (!S.canEdit && window.IHT && IHT.names && IHT.names.length) setTimeout(() => say(`تقدر تحدّث حالة مهام ${IHT.names.join('، ')} من جدول المهام.`), 1200);
     claude.use('downloads').then((d) => { S.dl = d; }).catch(() => {});
     const onErr = (e) => { if (e && e.code !== 'revoked') say('انقطع تحديث البيانات. أعد فتح الصفحة.', true); };
     const sub = (name) => db.collection(name).onSnapshot((snap) => { S[name] = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.loaded[name] = true; schedule(); }, onErr);
