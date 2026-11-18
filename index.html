@@ -1,0 +1,1175 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>نظام تسجيل احتواء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: a working tool — top bar with tabs and the download action, then one view at a time; tables scroll inside their own boxes. */
+:root {
+  --bg: #F4F7F6; --panel: #FFFFFF; --fg: #16211E; --muted: #5C6B67; --line: #DAE2DF;
+  --accent: #1E6A5A; --accent-soft: #E1EFEB; --amber: #B97A1E; --amber-soft: #F6EBDA;
+  --bad: #B23A3A; --bad-soft: #F7E3E1; --hover: #EEF3F1; --on-accent: #FFFFFF;
+  --f-body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --f-display: "Noto Kufi Arabic", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1412; --panel: #151D1B; --fg: #E4ECE9; --muted: #93A39E; --line: #25312D;
+  --accent: #4DB39B; --accent-soft: #17322B; --amber: #E0A653; --amber-soft: #33281A;
+  --bad: #E57B73; --bad-soft: #3A1E1C; --hover: #1B2522; --on-accent: #0E1412; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E1412; --panel: #151D1B; --fg: #E4ECE9; --muted: #93A39E; --line: #25312D;
+  --accent: #4DB39B; --accent-soft: #17322B; --amber: #E0A653; --amber-soft: #33281A;
+  --bad: #E57B73; --bad-soft: #3A1E1C; --hover: #1B2522; --on-accent: #0E1412; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
+.app { direction: rtl; max-width: 1180px; margin-inline: auto; padding-inline: 16px; padding-block: 18px 48px; display: grid; gap: 18px; }
+.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.brand h1 { font-family: var(--f-display); font-weight: 700; font-size: 1.45rem; margin: 0; letter-spacing: 0; }
+.brand p { margin: 0; color: var(--muted); font-size: .85rem; }
+.tabs { display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 4px; flex-wrap: wrap; }
+.tabs button { font: inherit; font-size: .9rem; border: 0; background: transparent; color: var(--muted); padding: 6px 14px; border-radius: 7px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+.btn { font: inherit; font-size: .9rem; border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 7px 14px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--hover); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.danger { color: var(--bad); border-color: var(--bad); background: transparent; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.card h2 { font-family: var(--f-display); font-weight: 600; font-size: 1.05rem; margin: 0; }
+.note { color: var(--muted); font-size: .84rem; margin: 0; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
+.kpi .v { font-family: var(--f-display); font-size: 1.7rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi .l { color: var(--muted); font-size: .82rem; }
+.kpi.new .v { color: var(--amber); } .kpi.ret .v { color: var(--accent); } .kpi.bad .v { color: var(--bad); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: .82rem; background: transparent; color: var(--muted); border: 0; padding: 5px 11px; cursor: pointer; }
+.seg button + button { border-inline-start: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+input[type=search], input[type=text], input[type=number], select { font: inherit; font-size: .9rem; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); min-width: 0; }
+input[type=search] { flex: 1 1 220px; }
+label.f { display: grid; gap: 4px; font-size: .82rem; color: var(--muted); min-width: 0; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 10px; }
+.tbox { max-height: 520px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .88rem; }
+th { position: sticky; top: 0; background: var(--panel); text-align: start; font-weight: 500; color: var(--muted); font-size: .78rem; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; z-index: 1; }
+td { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr.click { cursor: pointer; } tbody tr.click:hover { background: var(--hover); }
+tr.sel td { background: var(--accent-soft); }
+td.rk { color: var(--muted); width: 2.5rem; } td.num { font-weight: 600; } .mut { color: var(--muted); }
+.ib { display: flex; align-items: center; gap: 8px; } .ib i { display: block; height: 7px; border-radius: 4px; background: var(--line); }
+tr.top3 .ib i { background: var(--accent); }
+.pill { display: inline-block; font-size: .75rem; border-radius: 999px; padding: 1px 9px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.new { background: var(--amber-soft); color: var(--amber); border-color: transparent; }
+.pill.ret { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.pill.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.pill.dup { background: var(--hover); }
+.bars { display: grid; gap: 7px; }
+.bars .row { display: grid; grid-template-columns: minmax(7rem, 13rem) 1fr; gap: 10px; align-items: center; font-size: .82rem; }
+.bars .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bars .track { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bars .seg-r { height: 14px; background: var(--accent); border-radius: 0 4px 4px 0; }
+.bars .seg-n { height: 14px; background: var(--amber); border-radius: 4px 0 0 4px; }
+.bars .seg-r:only-of-type, .bars .seg-n:only-of-type { border-radius: 4px; }
+.bars .val { color: var(--fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--sw); margin-inline-end: 6px; vertical-align: -1px; }
+.drop { border: 2px dashed var(--line); border-radius: var(--r); padding: 28px 16px; text-align: center; display: grid; gap: 8px; justify-items: center; background: var(--panel); }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop strong { font-family: var(--f-display); font-weight: 600; }
+.status { font-size: .88rem; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); color: var(--fg); }
+.status.err { background: var(--bad-soft); color: var(--bad); }
+.who { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.who .nm { font-family: var(--f-display); font-size: 1.25rem; font-weight: 600; }
+.ov { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ov button { font: inherit; text-align: start; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; color: var(--fg); }
+.ov button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.ov .v { font-family: var(--f-display); font-size: 1.3rem; font-weight: 600; display: block; font-variant-numeric: tabular-nums; }
+.ov .l { font-size: .78rem; color: var(--muted); }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--bad-soft); padding: 8px 10px; border-radius: 8px; font-size: .85rem; }
+.hide-n { } @media (max-width: 640px) { .hide-n { display: none; } .ov { grid-template-columns: 1fr; } .bars .row { grid-template-columns: 1fr; gap: 2px; } }
+.empty { text-align: center; padding: 40px 16px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .view { animation: fade .25s ease-out; } @keyframes fade { from { opacity: .4; } to { opacity: 1; } } }
+
+/* ===== Ihtiwa suite theme (shared with نظام إدارة احتواء): navy #2F6AA2, sky #9ACCED, sun #FBB24C, coral #F27362 ===== */
+:root {
+  --bg: #F3F5F8; --panel: #FFFFFF; --fg: #172433; --muted: #5E6B7A; --line: #E2E7EE; --hover: #F1F4F8; --soft: #F7F9FB;
+  --accent: #2F6AA2; --accent-ink: #1F4E7C; --accent-soft: #E6F0FA; --on-accent: #FFFFFF;
+  --good: #2E7D55; --good-soft: #E3F3EA; --warn: #B56A0F; --warn-soft: #FDF1DF; --bad: #C0473A; --bad-soft: #FBE7E4;
+  --sky: #9ACCED; --sun: #FBB24C; --coral: #F27362;
+  --proj: #2F6AA2; --ops: #D98E1F; --spent: #E2604D;
+  --lead: #C9503E; --lead-soft: #FBE7E4; --dep: #2F6AA2; --dep-soft: #E6F0FA;
+  --amber: #C07A12; --amber-soft: #FDF1DF;
+  --f-body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --f-display: "Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --r: 12px; --sh: 0 1px 2px rgba(23,36,51,.05);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E141C; --panel: #151E29; --fg: #E5ECF4; --muted: #96A4B5; --line: #243142; --hover: #1B2633; --soft: #121A24;
+  --accent: #6FA8DC; --accent-ink: #9CC6EC; --accent-soft: #182B40; --on-accent: #0E141C;
+  --good: #6CC48F; --good-soft: #15291E; --warn: #E8A94F; --warn-soft: #2E2416; --bad: #EE8577; --bad-soft: #33201D;
+  --proj: #6FA8DC; --ops: #F0B35A; --spent: #F28A79; --lead: #F28A79; --lead-soft: #33201D; --dep: #6FA8DC; --dep-soft: #182B40;
+  --amber: #F0B35A; --amber-soft: #2E2416; --sh: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E141C; --panel: #151E29; --fg: #E5ECF4; --muted: #96A4B5; --line: #243142; --hover: #1B2633; --soft: #121A24;
+  --accent: #6FA8DC; --accent-ink: #9CC6EC; --accent-soft: #182B40; --on-accent: #0E141C;
+  --good: #6CC48F; --good-soft: #15291E; --warn: #E8A94F; --warn-soft: #2E2416; --bad: #EE8577; --bad-soft: #33201D;
+  --proj: #6FA8DC; --ops: #F0B35A; --spent: #F28A79; --lead: #F28A79; --lead-soft: #33201D; --dep: #6FA8DC; --dep-soft: #182B40;
+  --amber: #F0B35A; --amber-soft: #2E2416; --sh: none; color-scheme: dark; }
+[hidden] { display: none !important; }
+body { background: var(--bg); }
+h1, h2, h3 { font-family: var(--f-display); }
+/* brand bar */
+.brandbar { direction: rtl; background: linear-gradient(180deg, #163A5F, #12304F); color: #DCE7F2; position: sticky; top: 0; z-index: 15; }
+.brand-rule { display: grid; grid-template-columns: repeat(4, 1fr); height: 4px; }
+.brand-rule i:nth-child(1) { background: #FBB24C; } .brand-rule i:nth-child(2) { background: #9ACCED; } .brand-rule i:nth-child(3) { background: #F27362; } .brand-rule i:nth-child(4) { background: #2F6AA2; }
+.bb-in { max-width: 1300px; margin-inline: auto; box-sizing: border-box; padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; }
+.bb-home { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; }
+.bb-home img { width: 38px; height: 38px; border-radius: 9px; background: #fff; padding: 2px; box-sizing: border-box; }
+.bb-home b { display: block; font-family: var(--f-display); font-size: 1.05rem; line-height: 1.2; }
+.bb-home small { display: block; font-size: .74rem; color: #8FAAC6; }
+.bb-nav { display: flex; gap: 2px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.bb-nav::-webkit-scrollbar { display: none; }
+.bb-nav a { color: #DCE7F2; text-decoration: none; font-size: .88rem; padding: 7px 12px; border-radius: 8px; white-space: nowrap; }
+.bb-nav a:hover { background: rgba(255,255,255,.08); }
+.bb-nav a[aria-current="page"] { background: #fff; color: #163A5F; font-weight: 600; }
+/* page */
+.app { max-width: 1300px; padding-block: 24px 64px; gap: 20px; }
+.top { border-bottom: 1px solid var(--line); padding-bottom: 16px; align-items: flex-end; }
+.top h1, .brand h1 { font-family: var(--f-display); font-size: 1.65rem; font-weight: 700; }
+.top p, .brand p { color: var(--muted); }
+#scope { background: var(--accent-soft); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent); border-radius: 8px; }
+.card { border-color: var(--line); border-radius: var(--r); box-shadow: var(--sh); padding: 18px 20px; gap: 14px; }
+.card > h2, .card > .head h2 { font-size: 1.05rem; font-weight: 600; }
+.kpi { border-radius: 10px; border-color: var(--line); box-shadow: var(--sh); position: relative; overflow: hidden; }
+.kpi::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; width: 3px; background: var(--accent); }
+.kpi.warn::before, .kpi.new::before { background: var(--sun); } .kpi.bad::before { background: var(--bad); } .kpi.ret::before { background: var(--accent); }
+.kpi .v { font-family: var(--f-display); font-weight: 700; }
+.btn { border-radius: 8px; font-weight: 500; }
+.btn:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.btn.primary:hover { background: var(--accent-ink); }
+.tabs { background: var(--soft); border-color: var(--line); border-radius: 10px; }
+.tabs button { border-radius: 8px; font-weight: 500; }
+.tabs button[aria-selected="true"] { background: var(--panel); color: var(--accent-ink); box-shadow: 0 1px 3px rgba(23,36,51,.12); font-weight: 600; }
+.chip { border-radius: 8px; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.chip[aria-pressed="true"] .n { color: var(--accent-ink); }
+.seg { border-radius: 8px; background: var(--panel); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.pill { border-radius: 6px; font-weight: 500; }
+.status { border-radius: 10px; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent); }
+.status.err { background: var(--bad-soft); color: var(--bad); border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
+input[type=search], input[type=text], input[type=number], input[type=tel], select, textarea { background: var(--panel); border-color: var(--line); }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; }
+.tbox { border-color: var(--line); border-radius: 10px; background: var(--panel); }
+th { background: var(--soft); font-weight: 600; color: var(--muted); }
+td { border-color: var(--line); }
+tbody tr:hover td { background: var(--hover); }
+tr.grp td { background: var(--accent-soft); color: var(--accent-ink); }
+tr.tot td { border-top-color: var(--accent); color: var(--accent-ink); }
+.modal { border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.overlay { background: rgba(13,26,40,.45); }
+.drop { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); background: var(--soft); border-radius: 12px; }
+.empty { background: var(--soft); border-radius: 10px; }
+/* committees org chart */
+.root { background: #163A5F; color: #fff; border-radius: 10px; }
+.board { border: 2px solid var(--accent); border-radius: 12px; box-shadow: var(--sh); }
+.board .bp { background: var(--accent-soft); color: var(--accent-ink); border-radius: 6px; }
+.stem, .group::before { background: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.groups { border-top-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.group { background: var(--soft); border-style: solid; border-color: var(--line); border-radius: 12px; }
+.cnode { border-top-color: var(--accent); border-radius: 10px; box-shadow: var(--sh); }
+.cnode.nolead { border-top-color: var(--coral); }
+.cnode[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+.family { border-radius: 12px; }
+.slot { background: var(--soft); border-radius: 10px; }
+.slot.ref { border-inline-start-color: #163A5F; }
+.ov button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); background: var(--accent-soft); }
+@media (max-width: 640px) { .bb-home small { display: none; } .top h1, .brand h1 { font-size: 1.3rem; } }
+</style>
+
+<div class="brandbar"><div class="brand-rule" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="bb-in"><a class="bb-home" href="https://claude.ai/artifact/CMJMgic5Maf79SzjCvpG5H" target="_blank" rel="noopener"><img src="data:image/png;base64,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" alt="شعار احتواء"><span><b>احتواء</b><small>نظام الإدارة · خطة 2027</small></span></a><nav class="bb-nav" aria-label="صفحات النظام"><a href="https://claude.ai/artifact/CMJMgic5Maf79SzjCvpG5H" target="_blank" rel="noopener">نظام الإدارة</a><a href="https://claude.ai/artifact/QQBaG3zYYFyuoke8JbKDsg" target="_blank" rel="noopener">الموازنة</a><a href="https://claude.ai/artifact/JnNtAAvHkG8Kpmhnv5wdDK" target="_blank" rel="noopener">هيكل اللجان</a><a href="https://claude.ai/artifact/R1P6RJPxdNRNgQerKbC1t7" aria-current="page">نظام التسجيل</a></nav></div></div>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>نظام تسجيل احتواء</h1>
+      <p id="sub">قاعدة واحدة لكل تسجيلات المشاريع واللجان والعضوية</p>
+    </div>
+    <div class="controls">
+      <div class="tabs" role="tablist" aria-label="الأقسام">
+        <button role="tab" id="t-dash" aria-selected="true" data-v="dash">لوحة المعلومات</button>
+        <button role="tab" id="t-up" aria-selected="false" data-v="up">رفع ملف ومقارنته</button>
+        <button role="tab" id="t-drive" aria-selected="false" data-v="drive">ربط Google Drive</button>
+        <button role="tab" id="t-proj" aria-selected="false" data-v="proj">المشاريع</button>
+      </div>
+      <button class="btn primary" id="dl-all" type="button">⬇ تحميل القاعدة كاملة</button>
+    </div>
+  </header>
+  <div id="msg" class="status" hidden></div>
+
+  <!-- DASHBOARD -->
+  <section class="view" id="v-dash">
+    <div class="kpis" id="kpis">
+      <div class="kpi"><div class="v" id="k-mem">—</div><div class="l">عضو فريد في القاعدة</div></div>
+      <div class="kpi"><div class="v" id="k-reg">—</div><div class="l">تسجيل في المشاريع</div></div>
+      <div class="kpi ret"><div class="v" id="k-multi">—</div><div class="l" id="k-multi-l">سجّلوا في مشروعين أو أكثر</div></div>
+      <div class="kpi"><div class="v" id="k-five">—</div><div class="l">سجّلوا في 5 مشاريع أو أكثر</div></div>
+      <div class="kpi"><div class="v" id="k-proj">—</div><div class="l">ملف تسجيل مدمج</div></div>
+    </div>
+    <div class="card" id="ranking" style="margin-top:16px">
+      <h2>أكثر الأعضاء تسجيلاً</h2>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="السنة" id="f-year"></div>
+        <div class="seg" role="group" aria-label="ما يُحسب" id="f-basis">
+          <button type="button" data-v="p" aria-pressed="true">المشاريع فقط</button>
+          <button type="button" data-v="t" aria-pressed="false">مع اللجان والعضوية</button>
+        </div>
+        <div class="seg" role="group" aria-label="الجنس" id="f-gender">
+          <button type="button" data-v="" aria-pressed="true">الكل</button>
+          <button type="button" data-v="أنثى" aria-pressed="false">متطوعات</button>
+          <button type="button" data-v="ذكر" aria-pressed="false">متطوعون</button>
+        </div>
+        <input type="search" id="q" placeholder="ابحث بالاسم أو الجوال أو الهوية أو رقم العضو" aria-label="بحث">
+      </div>
+      <p class="note" id="rank-line"></p>
+      <div class="tbox"><table id="rank"><thead><tr><th>#</th><th>الاسم</th><th id="th-n">عدد المشاريع</th><th class="hide-n">السنوات</th><th class="hide-n">الجوال</th><th class="hide-n">رقم العضو</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card" id="member" hidden style="margin-top:16px">
+      <div class="who"><span class="nm" id="m-name"></span><span class="pill" id="m-code"></span><span class="pill" id="m-g"></span></div>
+      <p class="note" id="m-info"></p>
+      <div class="tbox" style="max-height:300px"><table><thead><tr><th>المشروع</th><th>النوع</th><th>السنة</th></tr></thead><tbody id="m-rows"></tbody></table></div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card" id="projbars">
+        <h2>المسجلون في كل مشروع</h2>
+        <div class="legend"><span style="--sw: var(--accent)">عائدون</span><span style="--sw: var(--amber)">جدد (أول ظهور لهم)</span></div>
+        <div class="bars" id="bars"></div>
+      </div>
+      <div class="card" id="years">
+        <h2>الأعضاء المسجلون في المشاريع كل سنة</h2>
+        <p class="note">كل عضو يُحسب مرة في السنة مهما تعددت مشاريعه.</p>
+        <div class="bars" id="ybars"></div>
+        <h2 style="margin-top:8px">كم مشروعاً سجّل فيه كل عضو</h2>
+        <div class="bars" id="lbars"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UPLOAD -->
+  <section class="view" id="v-up" hidden>
+    <div class="drop" id="drop">
+      <strong>اسحب ملف التسجيل هنا</strong>
+      <span class="note">Excel أو CSV، مثل ملف ردود Google Forms. الملف يُقرأ في متصفحك ولا يُضاف للقاعدة إلا إذا ضغطت «إضافة».</span>
+      <label class="btn" for="file">اختر ملفاً</label>
+      <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+    </div>
+    <div class="card" id="map" hidden style="margin-top:16px">
+      <h2 id="map-title">إعداد الملف</h2>
+      <div class="fields">
+        <label class="f">الورقة<select id="m-sheet"></select></label>
+        <label class="f">اسم المشروع<input type="text" id="p-name"></label>
+        <label class="f">الفئة<input type="text" id="p-fam" list="fams"><datalist id="fams"></datalist></label>
+        <label class="f">النوع<select id="p-type"><option>مشروع</option><option>لجان</option><option>عضوية</option></select></label>
+        <label class="f">السنة<input type="number" id="p-year" min="2015" max="2040"></label>
+      </div>
+      <p class="note">الأعمدة التي تعرّفنا عليها تلقائياً. غيّرها إذا كان أحدها خطأ.</p>
+      <div class="fields" id="colmap"></div>
+    </div>
+    <div id="res" hidden style="margin-top:16px; display:grid; gap:16px">
+      <div class="kpis">
+        <div class="kpi"><div class="v" id="r-rows">—</div><div class="l">صف في الملف</div></div>
+        <div class="kpi ret"><div class="v" id="r-ret">—</div><div class="l">أعضاء موجودون في القاعدة</div></div>
+        <div class="kpi new"><div class="v" id="r-new">—</div><div class="l">أعضاء جدد لأول مرة</div></div>
+        <div class="kpi"><div class="v" id="r-dup">—</div><div class="l">تسجيل مكرر داخل الملف</div></div>
+        <div class="kpi bad"><div class="v" id="r-bad">—</div><div class="l">صف مستبعد (تجريبي أو بلا جوال وهوية)</div></div>
+      </div>
+      <div class="card">
+        <h2>مقارنة مع مشروع سابق</h2>
+        <div class="controls"><label class="f" style="flex:1 1 260px">قارن مع<select id="cmp"></select></label></div>
+        <div class="ov" id="ov">
+          <button type="button" data-v="both" aria-pressed="true"><span class="v" id="o-both">—</span><span class="l">في الاثنين</span></button>
+          <button type="button" data-v="onlyNew" aria-pressed="false"><span class="v" id="o-new">—</span><span class="l">في هذا الملف فقط</span></button>
+          <button type="button" data-v="onlyOld" aria-pressed="false"><span class="v" id="o-old">—</span><span class="l" id="o-old-l">في المشروع السابق فقط</span></button>
+        </div>
+        <div class="tbox" style="max-height:320px"><table><thead><tr><th>الاسم</th><th class="hide-n">الجوال</th><th>رقم العضو</th><th>عدد مشاريعه قبل هذا الملف</th></tr></thead><tbody id="ov-rows"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2>نتيجة كل صف</h2>
+        <div class="controls">
+          <div class="seg" role="group" aria-label="الحالة" id="f-st">
+            <button type="button" data-v="" aria-pressed="true">الكل</button>
+            <button type="button" data-v="ret" aria-pressed="false">موجود</button>
+            <button type="button" data-v="new" aria-pressed="false">جديد</button>
+            <button type="button" data-v="dup" aria-pressed="false">مكرر</button>
+            <button type="button" data-v="bad" aria-pressed="false">مستبعد</button>
+          </div>
+        </div>
+        <div class="tbox"><table><thead><tr><th>الصف</th><th>الاسم كما ورد</th><th class="hide-n">الجوال</th><th>الحالة</th><th>رقم العضو</th><th class="hide-n">مشاريعه السابقة</th></tr></thead><tbody id="row-rows"></tbody></table></div>
+        <p class="note" id="row-line"></p>
+      </div>
+      <div class="card">
+        <h2>الخطوة التالية</h2>
+        <div class="controls">
+          <button class="btn" id="dl-rep" type="button">⬇ تحميل تقرير المقارنة</button>
+          <button class="btn primary" id="add" type="button">إضافة الملف إلى القاعدة</button>
+        </div>
+        <p class="note" id="add-note">الإضافة تسجّل المشروع، وتضيفه لسجل كل عضو موجود، وتنشئ أرقام عضوية للجدد. تقدر تحذفه لاحقاً من تبويب المشاريع.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DRIVE -->
+  <section class="view" id="v-drive" hidden>
+    <div class="card">
+      <h2>ربط ملفات من Google Drive</h2>
+      <p class="note">الصق رابط ملف تسجيل، أو رابط قائمة ملفات فيها روابط (مثل «قائمة ملفات المتطوعين»). يقرأ النظام الملفات من حسابك في Google Drive، ويقارن كل ملف بالقاعدة، ولا يضيف شيئاً إلا بعد ضغط «إضافة».</p>
+      <div class="controls">
+        <input type="text" id="g-url" placeholder="https://docs.google.com/spreadsheets/d/…" aria-label="رابط Google Drive" style="flex:1 1 320px">
+        <button class="btn primary" id="g-list" type="button">قراءة الرابط</button>
+      </div>
+      <div class="status" id="g-msg" hidden></div>
+    </div>
+    <div class="card" id="g-box" hidden style="margin-top:16px">
+      <div class="controls" style="justify-content:space-between">
+        <h2 id="g-title">الملفات</h2>
+        <div class="controls">
+          <button class="btn" id="g-scan" type="button">قراءة ومقارنة المحدد</button>
+          <button class="btn primary" id="g-add" type="button" disabled>إضافة الملفات الجاهزة إلى القاعدة</button>
+        </div>
+      </div>
+      <p class="note" id="g-sum"></p>
+      <div class="tbox" style="max-height:640px"><table><thead><tr><th><input type="checkbox" id="g-all" aria-label="تحديد الكل"></th><th>الملف</th><th class="hide-n">التصنيف</th><th>الحالة</th><th>النوع</th><th>السنة</th><th>النتيجة</th></tr></thead><tbody id="g-rows"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="view" id="v-proj" hidden>
+    <div class="card">
+      <h2>الملفات المدمجة في القاعدة</h2>
+      <p class="note">بالترتيب الزمني. «جدد» من كان هذا أول ظهور لهم. حذف مشروع يزيله من سجل كل الأعضاء، ويحذف الأعضاء الذين لم يسجلوا إلا فيه. تقدر تحدد أكثر من ملف وتحذفها مرة واحدة، أو تدمجها في مشروع واحد: العضو المسجل في أكثر من ملف منها يُحسب مرة، والنوع والسنة تؤخذ من أقدمها وتقدر تعدلها بعد الدمج.</p>
+      <div class="controls" id="bulk" hidden><span id="bulk-n"></span><input type="text" id="merge-name" aria-label="اسم المشروع بعد الدمج" style="flex:1 1 260px"><button class="btn primary" id="bulk-merge" type="button">دمج المحدد</button><button class="btn danger" id="bulk-del" type="button">حذف المحدد</button><button class="btn" id="bulk-clear" type="button">إلغاء التحديد</button></div>
+      <div class="tbox" style="max-height:none"><table><thead><tr><th></th><th>المشروع</th><th>النوع</th><th>السنة</th><th>المسجلون</th><th class="hide-n">جدد</th><th class="hide-n">المصدر</th><th></th></tr></thead><tbody id="p-rows"></tbody></table></div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(() => {
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Number(n || 0).toLocaleString('en-US');
+const pct = (x) => Math.round(x * 100) + '%';
+const el = (tag, txt, cls) => { const e = document.createElement(tag); if (txt != null) e.textContent = txt; if (cls) e.className = cls; return e; };
+
+// ---------- normalisation (same rules used to build the base)
+const AR = { '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9' };
+function digits(v) {
+  if (v == null) return '';
+  let s = String(v).replace(/[٠-٩۰-۹]/g, (c) => AR[c]).trim();
+  if (/^\d+\.0+$/.test(s)) s = s.split('.')[0];
+  if (/^\d+(\.\d+)?e\+?\d+$/i.test(s)) s = BigInt(Math.round(Number(s))).toString();
+  return s.replace(/\D/g, '');
+}
+function normPhone(v) {
+  let s = digits(v);
+  if (s.startsWith('00966')) s = s.slice(5); else if (s.startsWith('966')) s = s.slice(3);
+  if (s.length === 9 && s[0] === '5') s = '0' + s;
+  return /^05\d{8}$/.test(s) && new Set(s.slice(2)).size > 2 ? s : null;
+}
+function normId(v) {
+  const s = digits(v);
+  return /^[12]\d{9}$/.test(s) && new Set(s).size > 3 && s !== '1234567890' && s !== '1122334455' ? s : null;
+}
+function normName(v) {
+  let s = String(v || '').replace(/[ً-ْـٰ]/g, '').trim();
+  s = s.replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي');
+  s = s.replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  return s.split(' ').filter((t) => t && !['بن', 'بنت', 'ابن'].includes(t)).join(' ');
+}
+const cleanName = (v) => String(v || '').replace(/[ً-ْـٰ]/g, '').replace(/\s+/g, ' ').trim();
+const isTest = (nn) => !nn || nn.length < 3 || /test|تجربه|تيست|اختبار/.test(nn) || /^[a-z]{1,3}$/.test(nn) || /^[\d\s]+$/.test(nn);
+function gender(v) { const s = String(v || ''); if (/متطوعة|انث|أنث/.test(s)) return 'أنثى'; if (/متطوع|ذكر/.test(s)) return 'ذكر'; return ''; }
+
+// ---------- state
+const S = { db: null, user: null, canWrite: false, downloads: null, projects: [], nextCode: 1, members: [], chunks: new Map(), loaded: false,
+  view: 'dash', delSel: new Set(), year: 'all', basis: 'p', gender: '', q: '', sel: null,
+  file: null, wb: null, sheet: null, rows: [], header: [], map: {}, result: null, cmp: '', ov: 'both', st: '' };
+let byId = new Map(), byPhone = new Map(), pIndex = new Map(), lex = new Map();
+
+function say(text, err) { const m = $('msg'); m.hidden = !text; m.textContent = text || ''; m.className = 'status' + (err ? ' err' : ''); }
+
+// ---------- data load
+function decode(rec, chunkId) { return { code: rec[0], name: rec[1], g: rec[2] || '', phones: rec[3] ? rec[3].split('|') : [], ids: rec[4] ? rec[4].split('|') : [], birth: rec[5] || '', p: Array.from(rec[6] || []), chunk: chunkId }; }
+const encode = (m) => [m.code, m.name, m.g, m.phones.join('|'), m.ids.join('|'), m.birth, m.p];
+function sortProjects() { const k = (p) => String(p.start || (p.year + '-06')); S.projects.sort((a, b) => k(a).localeCompare(k(b)) || String(a.added || '').localeCompare(String(b.added || ''))); }
+function reindex() {
+  byId = new Map(); byPhone = new Map(); pIndex = new Map(S.projects.map((p, i) => [p.id, i])); lex = new Map();
+  for (const m of S.members) {
+    m.ids.forEach((i) => byId.set(i, m));
+    m.phones.forEach((ph) => { if (!byPhone.has(ph)) byPhone.set(ph, []); byPhone.get(ph).push(m); });
+    m.first = normName(m.name).split(' ')[0] || '';
+    if (m.g) { const c = lex.get(m.first) || { 'أنثى': 0, 'ذكر': 0 }; c[m.g]++; lex.set(m.first, c); }
+    const ps = m.p.filter((id) => pIndex.has(id));
+    m.ord = ps.map((id) => pIndex.get(id)).sort((a, b) => a - b);
+  }
+  // per member counts
+  for (const m of S.members) {
+    const c = { p_all: 0, t_all: 0 }; const yrs = new Set();
+    for (const i of m.ord) { const p = S.projects[i]; c.t_all++; c['t' + p.year] = (c['t' + p.year] || 0) + 1; if (p.type === 'مشروع') { c.p_all++; c['p' + p.year] = (c['p' + p.year] || 0) + 1; } yrs.add(p.year); }
+    m.c = c; m.years = yrs.size;
+  }
+}
+async function load() {
+  const [ps, cs] = await Promise.all([S.db.doc('sys/projects').get(), S.db.collection('chunks').get()]);
+  if (ps.exists) { const d = ps.data(); S.projects = d.list.map((x) => ({ ...x })); S.nextCode = d.nextCode || 1; } else { S.projects = []; }
+  sortProjects();
+  S.members = []; S.chunks = new Map();
+  cs.docs.forEach((doc) => { const arr = (doc.data().m || []).map((r) => decode(r, doc.id)); S.chunks.set(doc.id, arr); S.members.push(...arr); });
+  reindex(); S.loaded = true;
+  renderAll();
+}
+
+// ---------- dashboard
+const years = () => [...new Set(S.projects.map((p) => p.year))].sort();
+function renderYearSeg() {
+  const seg = $('f-year');
+  seg.replaceChildren(...['all', ...years()].map((y) => { const b = el('button', y === 'all' ? 'كل السنوات' : String(y)); b.type = 'button'; b.dataset.v = String(y); b.setAttribute('aria-pressed', String(String(S.year) === String(y))); return b; }));
+}
+function renderKpis() {
+  const n = S.members.length;
+  const regs = S.members.reduce((s, m) => s + m.c.p_all, 0);
+  const multi = S.members.filter((m) => m.c.p_all >= 2).length;
+  $('k-mem').textContent = fmt(n); $('k-reg').textContent = fmt(regs);
+  $('k-multi').textContent = fmt(multi); $('k-multi-l').textContent = `سجّلوا في مشروعين أو أكثر (${n ? pct(multi / n) : '0%'})`;
+  $('k-five').textContent = fmt(S.members.filter((m) => m.c.p_all >= 5).length);
+  $('k-proj').textContent = fmt(S.projects.length);
+  $('sub').textContent = S.projects.length ? `${fmt(n)} عضو من ${fmt(S.projects.length)} ملف تسجيل · ${years()[0]}–${years().slice(-1)[0]}` : 'قاعدة واحدة لكل تسجيلات المشاريع واللجان والعضوية';
+}
+const colName = () => S.year === 'all' ? S.basis + '_all' : S.basis + S.year;
+function renderRank() {
+  const c = colName(); const qq = normName(S.q); const qd = digits(S.q);
+  $('th-n').textContent = S.basis === 'p' ? 'عدد المشاريع' : 'عدد التسجيلات';
+  let rows = S.members.filter((m) => (m.c[c] || 0) > 0 && (!S.gender || m.g === S.gender));
+  rows.sort((a, b) => (b.c[c] || 0) - (a.c[c] || 0) || b.c.t_all - a.c.t_all || b.years - a.years || a.code.localeCompare(b.code));
+  let rank = 0, prev = null; rows.forEach((m, i) => { const v = m.c[c] || 0; if (v !== prev) { rank = i + 1; prev = v; } m.rank = rank; });
+  let shown;
+  if (S.q) shown = rows.filter((m) => (qq && normName(m.name).includes(qq)) || m.code.toLowerCase().includes(S.q.toLowerCase()) || (qd.length >= 4 && (m.phones.some((p) => p.includes(qd)) || m.ids.some((i) => i.includes(qd))))).slice(0, 300);
+  else shown = rows.slice(0, 100);
+  $('rank-line').textContent = S.q ? `${fmt(shown.length)} نتيجة من ${fmt(rows.length)} عضو.` : `أعلى ${fmt(shown.length)} من ${fmt(rows.length)} عضو مسجل.`;
+  const max = rows.length ? rows[0].c[c] : 1;
+  $('rank').tBodies[0].replaceChildren(...shown.map((m) => {
+    const tr = el('tr'); tr.className = 'click' + (m.rank <= 3 ? ' top3' : '') + (S.sel === m.code ? ' sel' : ''); tr.dataset.code = m.code; tr.tabIndex = 0;
+    const v = m.c[c] || 0; const td = el('td', null, 'num'); const ib = el('div', null, 'ib'); const i = el('i'); i.style.width = (v / max * 80) + 'px'; ib.append(el('span', fmt(v)), i); td.append(ib);
+    tr.append(el('td', String(m.rank), 'rk'), el('td', m.name), td, el('td', String(m.years), 'hide-n'), el('td', m.phones[0] || '', 'hide-n mut'), el('td', m.code, 'hide-n mut'));
+    return tr;
+  }));
+}
+function renderMember() {
+  const m = S.sel && S.members.find((x) => x.code === S.sel); const box = $('member');
+  if (!m) { box.hidden = true; return; }
+  box.hidden = false; $('m-name').textContent = m.name; $('m-code').textContent = m.code; $('m-g').textContent = m.g || 'الجنس غير محدد';
+  $('m-info').textContent = [m.phones.length ? 'الجوال: ' + m.phones.join('، ') : '', m.ids.length ? 'الهوية: ' + m.ids.join('، ') : '', m.birth ? 'الميلاد: ' + m.birth : ''].filter(Boolean).join(' · ');
+  $('m-rows').replaceChildren(...m.ord.map((i) => { const p = S.projects[i]; const tr = el('tr'); tr.append(el('td', p.name), el('td', p.type), el('td', String(p.year))); return tr; }));
+}
+function projectStats() {
+  const reg = new Array(S.projects.length).fill(0), fresh = new Array(S.projects.length).fill(0);
+  for (const m of S.members) { m.ord.forEach((i) => reg[i]++); if (m.ord.length) fresh[m.ord[0]]++; }
+  return { reg, fresh };
+}
+function barRows(host, items, max) {
+  host.replaceChildren(...items.map((it) => {
+    const row = el('div', null, 'row'); const lab = el('div', it.label, 'lab'); lab.title = it.label;
+    const tr = el('div', null, 'track');
+    if (it.a) { const a = el('div', null, 'seg-r'); a.style.width = (it.a / max * 100) + '%'; tr.append(a); }
+    if (it.b) { const b = el('div', null, 'seg-n'); b.style.width = (it.b / max * 100) + '%'; tr.append(b); }
+    tr.append(el('span', it.val, 'val')); row.append(lab, tr); return row;
+  }));
+}
+function renderCharts() {
+  const { reg, fresh } = projectStats(); const max = Math.max(1, ...reg) * 1.15;
+  barRows($('bars'), S.projects.map((p, i) => ({ label: `${p.name} · ${p.year}`, a: reg[i] - fresh[i], b: fresh[i], val: fmt(reg[i]) })), max);
+  const ys = years().map((y) => { const set = S.members.filter((m) => m.c['p' + y]); const nw = set.filter((m) => { const f = m.ord.map((i) => S.projects[i]).find((p) => p.type === 'مشروع'); return f && f.year === y; }).length; return { label: String(y), a: set.length - nw, b: nw, val: fmt(set.length) }; });
+  barRows($('ybars'), ys, Math.max(1, ...ys.map((y) => y.a + y.b)) * 1.15);
+  const dist = new Map(); S.members.forEach((m) => { if (m.c.p_all) dist.set(m.c.p_all, (dist.get(m.c.p_all) || 0) + 1); });
+  const ds = [...dist].sort((a, b) => a[0] - b[0]).map(([k, v]) => ({ label: k + (k === 1 ? ' مشروع' : ' مشاريع'), a: v, val: fmt(v) }));
+  barRows($('lbars'), ds, Math.max(1, ...ds.map((d) => d.a)) * 1.15);
+}
+function renderProjects() {
+  const { reg, fresh } = projectStats();
+  $('p-rows').replaceChildren(...S.projects.map((p, i) => {
+    const tr = el('tr'); const act = el('td');
+    if (S.canWrite) { const b = el('button', 'حذف', 'btn danger'); b.type = 'button'; b.style.padding = '3px 10px'; b.disabled = writing; b.addEventListener('click', () => askDelete(p, act)); act.append(b); }
+    const ck = el('td'); if (S.canWrite) { const c = el('input'); c.type = 'checkbox'; c.checked = S.delSel.has(p.id); c.disabled = writing; c.setAttribute('aria-label', 'تحديد ' + p.name); c.addEventListener('change', () => { if (c.checked) S.delSel.add(p.id); else S.delSel.delete(p.id); bulkBar(); }); ck.append(c); }
+    const tyC = el('td'), yrC = el('td');
+    if (S.canWrite) {
+      const sel = el('select'); ['مشروع', 'لجان', 'عضوية'].forEach((x) => sel.append(new Option(x))); sel.value = p.type; sel.setAttribute('aria-label', 'نوع ' + p.name);
+      const yi = el('input'); yi.type = 'number'; yi.min = 2010; yi.max = 2040; yi.value = p.year; yi.style.width = '5.5rem'; yi.setAttribute('aria-label', 'سنة ' + p.name);
+      const upd = async () => { const y = Number(yi.value); if (!y || y < 2010 || y > 2040) { yi.value = p.year; return; } const old = [p.type, p.year]; p.type = sel.value; p.year = y; if (!p.start || p.start.slice(0, 4) !== String(y)) p.start = old[1] !== y ? `${y}-06` : p.start; try { sortProjects(); await saveProjects(); reindex(); renderAll(); say(`عُدّل «${p.name}».`); } catch (e) { [p.type, p.year] = old; say('تعذر حفظ التعديل.', true); renderProjects(); } };
+      sel.addEventListener('change', upd); yi.addEventListener('change', upd); tyC.append(sel); yrC.append(yi);
+    } else { tyC.textContent = p.type; yrC.textContent = String(p.year); }
+    tr.append(ck, el('td', p.name), tyC, yrC, el('td', fmt(reg[i]), 'num'), el('td', fmt(fresh[i]), 'hide-n'), el('td', p.source === 'base' ? 'الدمج الأول' : (p.source === 'drive' ? 'Drive ' : 'رُفع ') + (p.added || '').slice(0, 10), 'hide-n mut'), act);
+    return tr;
+  }));
+  bulkBar();
+  $('fams').replaceChildren(...[...new Set(S.projects.map((p) => p.family))].map((f) => { const o = el('option'); o.value = f; return o; }));
+}
+function bulkBar() {
+  const n = S.delSel.size; $('bulk').hidden = !n || !S.canWrite; $('bulk-n').textContent = `محدد ${fmt(n)} ملف`;
+  $('bulk-del').textContent = 'حذف المحدد'; $('bulk-del').dataset.armed = ''; $('bulk-del').disabled = writing;
+  const mb = $('bulk-merge'); mb.textContent = 'دمج المحدد'; mb.dataset.armed = ''; mb.disabled = writing || n < 2; mb.title = n < 2 ? 'حدد ملفين أو أكثر للدمج' : '';
+  const first = S.projects.find((p) => S.delSel.has(p.id));
+  $('merge-name').disabled = writing; $('merge-name').placeholder = first ? `الاسم بعد الدمج (افتراضياً: ${first.name})` : 'الاسم بعد الدمج';
+}
+async function mergeProjects(ids, name) {
+  if (writing) { say('عملية حفظ أخرى جارية، انتظر حتى تنتهي.', true); return false; }
+  writing = true; renderProjects();
+  try {
+    say('جاري تحميل أحدث نسخة من القاعدة…');
+    await load();
+    const sel = S.projects.filter((p) => ids.includes(p.id));
+    if (sel.length < 2) { say('حدد ملفين على الأقل للدمج.', true); return false; }
+    const keep = sel[0]; const drop = new Set(sel.slice(1).map((p) => p.id));
+    const clash = S.projects.find((p) => !ids.includes(p.id) && normName(p.name) === normName(name));
+    if (clash) { say(`يوجد مشروع آخر بنفس الاسم «${clash.name}». اختر اسماً مختلفاً أو حدده ضمن الدمج.`, true); return false; }
+    const alias = new Set(keep.alias || []);
+    sel.forEach((p) => [p.name, p.file, ...(p.alias || [])].forEach((x) => { if (x && x !== name) alias.add(x); }));
+    keep.alias = [...alias]; keep.name = name;
+    keep.rows = sel.reduce((s, p) => s + (p.rows || 0), 0);
+    keep.file = [...new Set(sel.map((p) => p.file).filter(Boolean))].join(' + ');
+    const starts = sel.map((p) => p.start).filter(Boolean).sort(); if (starts.length) keep.start = starts[0];
+    const changed = new Set();
+    for (const [cid, arr] of S.chunks) {
+      let ch = false;
+      for (const m of arr) {
+        if (!m.p.some((x) => drop.has(x))) continue;
+        const np = []; for (const x of m.p) { const y = drop.has(x) ? keep.id : x; if (!np.includes(y)) np.push(y); }
+        m.p = np; ch = true;
+      }
+      if (ch) changed.add(cid);
+    }
+    await writeChunks([...changed]);
+    S.projects = S.projects.filter((p) => !drop.has(p.id));
+    await saveProjects();
+    writing = false; S.delSel = new Set();
+    await load(); say(`دُمج ${fmt(sel.length)} ملفات في «${name}».`);
+    return true;
+  } catch (e) {
+    writing = false;
+    say(`تعذر إكمال الدمج (${(e && (e.code || e.message)) || 'خطأ'}). أعد المحاولة؛ الدمج يكمل من حيث توقف.`, true);
+    await load().catch(() => {}); return false;
+  } finally { writing = false; renderProjects(); }
+}
+function renderAll() {
+  if (!S.loaded) return;
+  renderYearSeg(); renderKpis(); renderRank(); renderMember(); renderCharts(); renderProjects();
+  if (S.rows.length) runCompare();
+}
+
+$('bulk-clear').addEventListener('click', () => { S.delSel = new Set(); renderProjects(); });
+$('bulk-del').addEventListener('click', async () => {
+  const b = $('bulk-del');
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = `تأكيد حذف ${fmt(S.delSel.size)} ملف`; return; }
+  b.disabled = true; await deleteProjects([...S.delSel]);
+});
+$('bulk-merge').addEventListener('click', async () => {
+  const b = $('bulk-merge'); const ids = [...S.delSel]; if (ids.length < 2) return;
+  const first = S.projects.find((p) => S.delSel.has(p.id));
+  const name = $('merge-name').value.trim() || (first && first.name) || '';
+  if (!name) return;
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = `تأكيد دمج ${fmt(ids.length)} ملفات باسم «${name}»`; return; }
+  b.disabled = true; if (await mergeProjects(ids, name)) $('merge-name').value = '';
+});
+// ---------- tabs & filters
+document.querySelector('.tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return; S.view = b.dataset.v;
+  document.querySelectorAll('.tabs button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+  ['dash', 'up', 'drive', 'proj'].forEach((v) => { $('v-' + v).hidden = v !== S.view; });
+});
+function seg(id, key, fn) { $(id).addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; $(id).querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); fn(); }); }
+seg('f-year', 'year', renderRank); seg('f-basis', 'basis', renderRank); seg('f-gender', 'gender', renderRank);
+seg('f-st', 'st', renderRowTable); seg('ov', 'ov', renderOverlap);
+let qt; $('q').addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => { S.q = $('q').value.trim(); renderRank(); }, 150); });
+const pick = (e) => { const tr = e.target.closest('tr[data-code]'); if (!tr) return; S.sel = S.sel === tr.dataset.code ? null : tr.dataset.code; renderRank(); renderMember(); if (S.sel) $('member').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+$('rank').addEventListener('click', pick); $('rank').addEventListener('keydown', (e) => { if (e.key === 'Enter') pick(e); });
+
+// ---------- upload & parse
+const drop = $('drop');
+['dragover', 'dragenter'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (e) => { const f = e.dataTransfer.files[0]; if (f) readFile(f); });
+$('file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) readFile(f); e.target.value = ''; });
+
+async function readFile(f) {
+  if (!window.XLSX) { say('تعذر تحميل قارئ ملفات Excel. أعد فتح الصفحة.', true); return; }
+  say('جاري قراءة الملف…');
+  try {
+    const buf = await f.arrayBuffer();
+    S.wb = XLSX.read(buf, { type: 'array', cellDates: true });
+    S.file = f.name;
+    const scores = S.wb.SheetNames.map((n) => [n, sheetScore(n)]);
+    const best = scores.slice().sort((a, b) => b[1] - a[1])[0];
+    const pref = S.wb.SheetNames.find((n) => /ردود|responses/i.test(n) && sheetScore(n) > 0) || (best && best[1] > 0 ? best[0] : S.wb.SheetNames[0]);
+    const usable = usableSheets(S.wb);
+    const opts = S.wb.SheetNames.map((n) => { const o = el('option', n); o.value = n; return o; });
+    if (usable.length >= 2) { const o = el('option', `كل الأوراق معاً (${usable.length})`); o.value = '__all__'; opts.unshift(o); }
+    $('m-sheet').replaceChildren(...opts);
+    if (usable.length === 1 && !headerOk(S.wb, pref)) { const o = el('option', 'تلقائي (تعرّف على الأعمدة من البيانات)'); o.value = '__all__'; opts.unshift(o); $('m-sheet').replaceChildren(...opts); }
+    $('m-sheet').value = usable.length >= 2 || (usable.length === 1 && !headerOk(S.wb, pref)) ? '__all__' : pref;
+    const gm = guessMeta(f.name);
+    $('p-name').value = gm.name; $('p-fam').value = gm.family; $('p-type').value = gm.type; S.titleYear = titleYear(f.name);
+    loadSheet($('m-sheet').value);
+    $('map').hidden = false; $('map-title').textContent = 'إعداد الملف: ' + f.name;
+  } catch (err) { say('تعذرت قراءة الملف. تأكد أنه Excel أو CSV سليم.', true); }
+}
+function titleYear(t) {
+  const s = String(t || '').replace(/[٠-٩]/g, (c) => AR[c]);
+  const g = s.match(/(20[1-3]\d)/); if (g) return Number(g[1]);
+  const h = s.match(/(14[3-5]\d)/); if (h) return Math.round(Number(h[1]) * 0.970229 + 621.5643);
+  return null;
+}
+function cleanTitle(t) {
+  return String(t || '').replace(/\.(xlsx|xls|csv)$/i, '').replace(/[\u2066-\u2069\u200e\u200f]/g, '').replace(/^\s*(copy of|نسخة من|نسخه من|نسخة)\s*/i, '')
+    .replace(/\((الردود|responses)\)/gi, '').replace(/\s+/g, ' ').trim();
+}
+function guessMeta(title) {
+  const base = cleanTitle(title).replace(/^\s*تسجيل\s*(مشروع|حملة)?\s*/, '').trim() || cleanTitle(title);
+  const fam = [...new Set(S.projects.map((p) => p.family))].find((x) => x && normName(base).includes(normName(x)));
+  const type = /لجان|لجنة/.test(base) ? 'لجان' : /قاعدة بيانات|قاعدة البيانات|قاعدة_بيانات|عضوي|أعضاء|اعضاء|members|بيانات|قائمة|ترشيح|مرشحين|توزيع/i.test(base) ? 'عضوية' : 'مشروع';
+  return { name: base, family: fam || base.replace(/\s*[\d٠-٩]+.*$/, '').trim() || base, type };
+}
+function parseBook(wb) {
+  const score = (n) => { const aoa = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null }); const hdr = (aoa[0] || []).map((c) => String(c ?? '')); const j = hdr.findIndex(nameTest); return j < 0 ? 0 : aoa.slice(1).filter((r) => r && r[j] != null && !['', '-', '.'].includes(String(r[j]).trim())).length; };
+  const scores = wb.SheetNames.map((n) => [n, score(n)]);
+  const best = scores.slice().sort((a, b) => b[1] - a[1])[0];
+  const us = usableSheets(wb); const multi = us.length >= 2 || (us.length === 1 && !headerOk(wb, us[0]));
+  const sheet = multi ? '__all__' : ((scores.find(([n, v]) => /ردود|responses/i.test(n) && v > 0) || [])[0] || (best && best[1] > 0 ? best[0] : wb.SheetNames[0]));
+  const aoa = multi ? combineAoa(wb).aoa : XLSX.utils.sheet_to_json(wb.Sheets[sheet], { header: 1, raw: true, defval: null });
+  let h = 0; if (!multi) for (let i = 0; i < Math.min(5, aoa.length); i++) { if ((aoa[i] || []).filter((c) => c != null && String(c).trim()).length >= 3) { h = i; break; } }
+  const header = (aoa[h] || []).map((c) => String(c ?? '').trim());
+  const rows = aoa.slice(h + 1).map((r, i) => ({ r, n: multi ? r[6] : h + i + 2 })).filter((x) => x.r.some((c) => c != null && String(c).trim() !== ''));
+  const map = {}; FIELDS.forEach(([k, , test]) => { const auto = header.map((x, j) => (test(x) ? j : -1)).filter((j) => j >= 0); map[k] = { mode: auto.length ? 'auto' : 'none', auto }; });
+  const ys = []; if (map.ts.auto.length) rows.forEach(({ r }) => { const v = r[map.ts.auto[0]]; const d = v instanceof Date ? v : (v ? new Date(v) : null); if (d && !isNaN(d)) ys.push(d.getFullYear()); });
+  ys.sort();
+  const dates = []; if (map.ts.auto.length) rows.forEach(({ r }) => { const d = toDateStr(r[map.ts.auto[0]]); if (d) dates.push(d); }); dates.sort();
+  return { sheet, header, rows, map, tsYear: ys.length ? ys[Math.floor(ys.length / 2)] : null, start: dates.length ? dates[Math.floor(dates.length * .05)].slice(0, 7) : '' };
+}
+$('m-sheet').addEventListener('change', () => loadSheet($('m-sheet').value));
+const FIELDS = [
+  ['name', 'الاسم', (h) => (/الاسم|الإسم|^\s*[اإ]سم\s|arabic name|full name|^\s*name\s*$/i.test(h)) && !/انجليز|english|first|second|third|last|الأول|الأخير|الجهة|المدرسة|العائلة|الأب|المستخدم|الحملة|المشروع|اللجنة|الفريق|المسؤول|المرشح/i.test(h)],
+  ['phone', 'الجوال', (h) => /جوال|هاتف|phone|mobile/i.test(h) && !/بديل|طوارئ|قريب|emergency/i.test(h)],
+  ['nid', 'رقم الهوية', (h) => /هوية|الهوية|السجل المدني|الإقامة|national id|\bid number\b|iqama/i.test(h)],
+  ['gender', 'الجنس', (h) => /^\s*(متطوع أو متطوعة|الجنس(?!ي)|متطوع\s*:|sex|gender)/i.test(h)],
+  ['birth', 'تاريخ الميلاد', (h) => /ميلاد|birth|d\.?o\.?b/i.test(h)],
+  ['ts', 'تاريخ التسجيل', (h) => /طابع زمني|timestamp/i.test(h)],
+];
+FIELDS.forEach((f) => { const t = f[2]; f[2] = (h) => t(String(h ?? '').replace(/[\u064B-\u0652\u0640\u0670]/g, '')); });
+const nameTest = FIELDS[0][2];
+const ALLH = ['الاسم الثلاثي', 'رقم الجوال', 'رقم الهوية', 'الجنس', 'تاريخ الميلاد', 'طابع زمني', 'الورقة'];
+function sheetParts(wb, n) {
+  const aoa = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null });
+  let h = 0; for (let i = 0; i < Math.min(5, aoa.length); i++) { if ((aoa[i] || []).filter((c) => c != null && String(c).trim()).length >= 3) { h = i; break; } }
+  const header = (aoa[h] || []).map((c) => String(c ?? '').trim());
+  const map = {}; FIELDS.forEach(([k, , test]) => { map[k] = header.map((x, j) => (test(x) ? j : -1)).filter((j) => j >= 0); });
+  let body = aoa.slice(h + 1), first = h + 2;
+  if (!map.name.length) { // a sheet without a header row: guess columns from the values
+    const rows = aoa.slice(h).filter((r) => r && r.some((c) => c != null && String(c).trim()));
+    const width = Math.max(0, ...rows.map((r) => r.length)); const share = (f) => { const out = []; for (let j = 0; j < width; j++) { const v = rows.filter((r) => f(r[j])).length; if (rows.length && v / rows.length >= 0.6) out.push(j); } return out; };
+    const nm = share((v) => typeof v === 'string' && /[؀-ۿ]/.test(v) && v.trim().split(/\s+/).length >= 2 && v.trim().split(/\s+/).length <= 6 && !/\d/.test(v));
+    const ph = share((v) => normPhone(v)); const id = share((v) => normId(v));
+    if (nm.length && (ph.length || id.length)) { map.name = [nm[0]]; map.phone = ph.slice(0, 1); map.nid = id.slice(0, 1); body = aoa.slice(h); first = h + 1; }
+  }
+  if (map.name.length && !map.phone.length && !map.nid.length) {
+    const rows = body.filter((r) => r && r.some((c) => c != null && String(c).trim()));
+    const width = Math.max(0, ...rows.map((r) => r.length)); const share = (f) => { for (let j = 0; j < width; j++) { const v = rows.filter((r) => f(r[j])).length; if (rows.length && v / rows.length >= 0.5) return [j]; } return []; };
+    map.phone = share((v) => normPhone(v)); map.nid = share((v) => normId(v));
+  }
+  return { header, map, body, first };
+}
+function headerOk(wb, n) { const aoa = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null }); let h = 0; for (let i = 0; i < Math.min(5, aoa.length); i++) { if ((aoa[i] || []).filter((c) => c != null && String(c).trim()).length >= 3) { h = i; break; } } const hd = (aoa[h] || []).map((c) => String(c ?? '')); return hd.some(FIELDS[0][2]) && (hd.some(FIELDS[1][2]) || hd.some(FIELDS[2][2])); }
+function combineAoa(wb) {
+  const used = [], skipped = []; const out = [ALLH];
+  for (const n of wb.SheetNames) {
+    const { map, body, first } = sheetParts(wb, n);
+    if (!map.name.length || (!map.phone.length && !map.nid.length)) { if (body.length) skipped.push(n); continue; }
+    let c = 0;
+    body.forEach((r, i) => {
+      if (!r || !r.some((v) => v != null && String(v).trim() !== '')) return;
+      const pick = (cols) => { for (const j of cols) { const v = r[j]; if (v != null && !['', '.', '-', '..'].includes(String(v).trim())) return v; } return null; };
+      const row = [pick(map.name), pick(map.phone), pick(map.nid), pick(map.gender), pick(map.birth), pick(map.ts), `${n}: ${first + i}`];
+      if (row[0] == null) return; out.push(row); c++;
+    });
+    used.push(`${n} (${c})`);
+  }
+  return { aoa: out, used, skipped };
+}
+function usableSheets(wb) { return wb.SheetNames.filter((n) => { const { map } = sheetParts(wb, n); return map.name.length && (map.phone.length || map.nid.length); }); }
+function sheetScore(name) {
+  const aoa = XLSX.utils.sheet_to_json(S.wb.Sheets[name], { header: 1, raw: true, defval: null });
+  const hdr = (aoa[0] || []).map((c) => String(c ?? ''));
+  const j = hdr.findIndex(nameTest);
+  if (j < 0) return 0;
+  return aoa.slice(1).filter((r) => r && r[j] != null && !['', '-', '.'].includes(String(r[j]).trim())).length;
+}
+function loadSheet(name) {
+  S.sheet = name; let aoa, h = 0, all = null;
+  if (name === '__all__') { all = combineAoa(S.wb); aoa = all.aoa; }
+  else { aoa = XLSX.utils.sheet_to_json(S.wb.Sheets[name], { header: 1, raw: true, defval: null }); for (let i = 0; i < Math.min(5, aoa.length); i++) { if ((aoa[i] || []).filter((c) => c != null && String(c).trim()).length >= 3) { h = i; break; } } }
+  S.header = (aoa[h] || []).map((c) => String(c ?? '').trim());
+  S.rows = aoa.slice(h + 1).map((r, i) => ({ r, n: all ? r[6] : h + i + 2 })).filter((x) => x.r.some((c) => c != null && String(c).trim() !== ''));
+  S.allNote = all ? `جُمعت الأوراق: ${all.used.join('، ')}.${all.skipped.length ? ` لم تُقرأ (لا يوجد فيها اسم وجوال أو هوية): ${all.skipped.join('، ')}.` : ''} التكرار بين الأوراق يُحسب مرة واحدة.` : '';
+  S.map = {};
+  const host = $('colmap'); host.replaceChildren();
+  FIELDS.forEach(([k, lab, test]) => {
+    const auto = S.header.map((x, j) => (test(x) ? j : -1)).filter((j) => j >= 0);
+    const sel = el('select'); sel.id = 'col-' + k;
+    sel.append(new Option(auto.length ? `تلقائي: ${S.header[auto[0]].slice(0, 40)}${auto.length > 1 ? ` (+${auto.length - 1})` : ''}` : 'غير موجود', auto.length ? 'auto' : 'none'));
+    if (auto.length) sel.append(new Option('غير موجود', 'none'));
+    S.header.forEach((x, j) => { if (x) sel.append(new Option(x.slice(0, 60), String(j))); });
+    S.map[k] = { mode: auto.length ? 'auto' : 'none', auto };
+    sel.addEventListener('change', () => { S.map[k].mode = sel.value; runCompare(); });
+    const l = el('label', lab, 'f'); l.append(sel); host.append(l);
+  });
+  // guess year from registration dates
+  const tsCols = S.map.ts.auto; const ys = [];
+  S.rows.forEach(({ r }) => { const v = tsCols.length ? r[tsCols[0]] : null; const d = v instanceof Date ? v : (v ? new Date(v) : null); if (d && !isNaN(d)) ys.push(d.getFullYear()); });
+  ys.sort(); $('p-year').value = S.titleYear || (ys.length ? ys[Math.floor(ys.length / 2)] : new Date().getFullYear());
+  const miss = ['name', 'phone', 'nid'].filter((k) => S.map[k].mode === 'none');
+  if (S.map.name.mode === 'none') say('لم نتعرف على عمود الاسم في هذه الورقة. اختره من قائمة «الاسم» أو غيّر الورقة.', true);
+  else if (miss.length === 2) say('لم نتعرف على عمود الجوال ولا الهوية، فلن يمكن مطابقة الأعضاء. اخترهما يدوياً.', true);
+  else say(S.allNote || '');
+  runCompare();
+}
+function getVal(r, k, map) {
+  const m = (map || S.map)[k]; if (!m || m.mode === 'none') return null;
+  const cols = m.mode === 'auto' ? m.auto : [Number(m.mode)];
+  for (const j of cols) { const v = r[j]; if (v != null && !['', '.', '-', '..'].includes(String(v).trim())) return v; }
+  return null;
+}
+function toDateStr(v) {
+  if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0, 10);
+  const s = digits(v) ? String(v).replace(/[٠-٩]/g, (c) => AR[c]).trim() : '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+  if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  return '';
+}
+
+// ---------- matching
+function findMember(id, ph, first, local) {
+  if (id && byId.has(id)) return byId.get(id);
+  if (id && local.byId.has(id)) return local.byId.get(id);
+  if (ph) {
+    const c = (byPhone.get(ph) || []).find((m) => m.first === first && !(id && m.ids.length && !m.ids.includes(id) && m.ids.every((x) => x.slice(0, 7) !== id.slice(0, 7))));
+    if (c) return c;
+    const l = (local.byPhone.get(ph) || []).find((m) => m.first === first);
+    if (l) return l;
+  }
+  return null;
+}
+function computeCompare(rows, map) {
+  const local = { byId: new Map(), byPhone: new Map() };
+  const out = []; const seen = new Set(); let next = S.nextCode;
+  const newMembers = []; const touched = new Map();
+  for (const { r, n } of rows) {
+    const rawName = getVal(r, 'name', map); const nn = normName(rawName); const ph = normPhone(getVal(r, 'phone', map)); const id = normId(getVal(r, 'nid', map));
+    const rec = { n, name: cleanName(rawName), phone: ph || String(getVal(r, 'phone', map) ?? ''), id: id || '', g: gender(getVal(r, 'gender', map)), birth: toDateStr(getVal(r, 'birth', map)), date: toDateStr(getVal(r, 'ts', map)) };
+    if (isTest(nn)) { out.push({ ...rec, st: 'bad', why: 'تجريبي أو بلا اسم' }); continue; }
+    if (!ph && !id) { out.push({ ...rec, st: 'bad', why: 'لا جوال ولا هوية صالحة' }); continue; }
+    const first = nn.split(' ')[0];
+    let m = findMember(id, ph, first, local);
+    let isNew = false;
+    if (!m) {
+      const fn = lex.get(first); let g = rec.g;
+      if (!g && fn) { const t = fn['أنثى'] + fn['ذكر']; if (t >= 3) { if (fn['أنثى'] / t >= .95) g = 'أنثى'; else if (fn['ذكر'] / t >= .95) g = 'ذكر'; } }
+      m = { code: 'IH-' + String(next++).padStart(5, '0'), name: rec.name, g, phones: [], ids: [], birth: rec.birth, p: [], first, ord: [], c: { p_all: 0, t_all: 0 }, isNew: true };
+      newMembers.push(m); isNew = true;
+    }
+    if (m.isNew) { if (ph && !m.phones.includes(ph)) { m.phones.push(ph); if (!local.byPhone.has(ph)) local.byPhone.set(ph, []); local.byPhone.get(ph).push(m); } if (id && !m.ids.includes(id)) { m.ids.push(id); local.byId.set(id, m); } }
+    else touched.set(m.code, { m, ph, id, g: rec.g, birth: rec.birth });
+    if (seen.has(m.code)) { out.push({ ...rec, st: 'dup', code: m.code, prev: m.isNew ? 0 : m.c.t_all, why: 'سجّل أكثر من مرة' }); continue; }
+    seen.add(m.code);
+    out.push({ ...rec, st: m.isNew ? 'new' : 'ret', code: m.code, prev: m.isNew ? 0 : m.c.t_all, prevP: m.isNew ? 0 : m.c.p_all, member: m });
+  }
+  return { out, newMembers, touched, next, codes: seen };
+}
+function runCompare() {
+  if (!S.rows.length || !S.loaded) return;
+  S.result = computeCompare(S.rows, S.map);
+  const { out } = S.result;
+  const cnt = (s) => out.filter((x) => x.st === s).length;
+  $('r-rows').textContent = fmt(S.rows.length); $('r-ret').textContent = fmt(cnt('ret')); $('r-new').textContent = fmt(cnt('new')); $('r-dup').textContent = fmt(cnt('dup')); $('r-bad').textContent = fmt(cnt('bad'));
+  $('res').hidden = false;
+  // compare select
+  const cmp = $('cmp'); const prevVal = cmp.value;
+  const fam = $('p-fam').value.trim();
+  cmp.replaceChildren(...S.projects.slice().reverse().map((p) => { const o = el('option', `${p.name} · ${p.year}`); o.value = p.id; return o; }));
+  const sameFam = S.projects.filter((p) => p.family === fam && normName(p.name) !== normName($('p-name').value)).slice(-1)[0];
+  cmp.value = prevVal && S.projects.some((p) => p.id === prevVal) ? prevVal : (sameFam || S.projects.slice(-1)[0] || {}).id || '';
+  const dupName = S.projects.find((p) => normName(p.name) === normName($('p-name').value));
+  $('add').disabled = !S.canWrite || !$('p-name').value.trim();
+  $('add-note').textContent = !S.canWrite ? 'الإضافة للقاعدة متاحة لمن يملك صلاحية التعديل فقط. تقدر تحمّل التقرير.' : dupName ? `تنبيه: يوجد مشروع بنفس الاسم «${dupName.name}». غيّر الاسم إن كان هذا ملفاً مختلفاً، أو احذف القديم أولاً.` : 'الإضافة تسجّل المشروع، وتضيفه لسجل كل عضو موجود، وتنشئ أرقام عضوية للجدد. تقدر تحذفه لاحقاً من تبويب المشاريع.';
+  renderOverlap(); renderRowTable();
+}
+['p-name', 'p-fam'].forEach((id) => $(id).addEventListener('change', runCompare));
+$('cmp').addEventListener('change', renderOverlap);
+function overlapSets() {
+  const pid = $('cmp').value; const R = S.result; if (!R) return null;
+  const oldM = S.members.filter((m) => m.p.includes(pid));
+  const oldSet = new Set(oldM.map((m) => m.code));
+  const mine = R.out.filter((x) => x.st === 'ret' || x.st === 'new');
+  return { pid, both: mine.filter((x) => oldSet.has(x.code)), onlyNew: mine.filter((x) => !oldSet.has(x.code)), onlyOld: oldM.filter((m) => !R.codes.has(m.code)) };
+}
+function renderOverlap() {
+  const o = overlapSets(); if (!o) return;
+  const p = S.projects.find((x) => x.id === o.pid);
+  $('o-both').textContent = fmt(o.both.length); $('o-new').textContent = fmt(o.onlyNew.length); $('o-old').textContent = fmt(o.onlyOld.length);
+  $('o-old-l').textContent = p ? `في «${p.name}» فقط` : 'في المشروع السابق فقط';
+  const list = o[S.ov].slice(0, 500);
+  $('ov-rows').replaceChildren(...list.map((x) => { const m = x.member || x; const tr = el('tr'); tr.append(el('td', x.name), el('td', (x.phones ? x.phones[0] : x.phone) || '', 'hide-n mut'), el('td', x.code, 'mut'), el('td', fmt(x.member ? x.prevP : m.c.p_all))); return tr; }));
+}
+const ST = { ret: ['موجود', 'ret'], new: ['جديد', 'new'], dup: ['مكرر', 'dup'], bad: ['مستبعد', 'bad'] };
+function renderRowTable() {
+  const R = S.result; if (!R) return;
+  const rows = R.out.filter((x) => !S.st || x.st === S.st); const shown = rows.slice(0, 800);
+  $('row-rows').replaceChildren(...shown.map((x) => { const tr = el('tr'); const st = el('td'); const pl = el('span', ST[x.st][0] + (x.why ? ' · ' + x.why : ''), 'pill ' + ST[x.st][1]); st.append(pl); tr.append(el('td', String(x.n), 'mut'), el('td', x.name || '—'), el('td', x.phone, 'hide-n mut'), st, el('td', x.code || '', 'mut'), el('td', x.st === 'ret' ? fmt(x.prev) : '', 'hide-n')); return tr; }));
+  $('row-line').textContent = rows.length > shown.length ? `يُعرض أول ${fmt(shown.length)} من ${fmt(rows.length)}. التقرير المحمّل فيه كل الصفوف.` : '';
+}
+
+// ---------- write helpers
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function retry(fn) {
+  for (let t = 0; ; t++) {
+    try { return await fn(); }
+    catch (e) { if (t < 4 && e && (e.code === 'resource_exhausted' || e.code === 'unavailable')) { await wait(1500 * (t + 1) + Math.random() * 500); continue; } throw e; }
+  }
+}
+async function writeChunks(ids) {
+  let i = 0;
+  for (const cid of ids) {
+    i++; say(`جاري الحفظ… ${i} من ${ids.length}`);
+    const arr = S.chunks.get(cid) || [];
+    const ref = S.db.doc('chunks/' + cid);
+    await retry(() => (arr.length ? ref.set({ m: arr.map(encode) }) : ref.delete()));
+    await wait(250);
+  }
+}
+async function saveProjects() { await retry(() => S.db.doc('sys/projects').set({ list: S.projects.map(({ id, name, family, type, year, start, rows, source, added, file, fileId, alias }) => ({ id, name, family, type, year, start: start || '', rows: rows || 0, source: source || 'upload', added: added || '', file: file || '', fileId: fileId || '', alias: alias || [] })), nextCode: S.nextCode, updated: new Date().toISOString() })); }
+function splitBig(changed) {
+  for (const cid of [...changed]) {
+    const arr = S.chunks.get(cid) || [];
+    if (JSON.stringify({ m: arr.map(encode) }).length < 200000 || arr.length < 2) continue;
+    const keys = [...S.chunks.keys()].sort(); const nid = 'c' + String(Number(keys.slice(-1)[0].slice(1)) + 1).padStart(3, '0');
+    const moved = arr.splice(Math.floor(arr.length / 2)); moved.forEach((m) => { m.chunk = nid; });
+    S.chunks.set(nid, moved); changed.add(nid);
+  }
+}
+async function commitImport(R, proj) {
+  const pid = proj.id;
+  const changed = new Set();
+  for (const { m, ph, id, g, birth } of R.touched.values()) {
+    if (!R.codes.has(m.code)) continue;
+    if (!m.p.includes(pid)) m.p.push(pid);
+    if (ph && !m.phones.includes(ph)) m.phones.push(ph);
+    if (id && !m.ids.includes(id)) m.ids.push(id);
+    if (!m.g && g) m.g = g; if (!m.birth && birth) m.birth = birth;
+    changed.add(m.chunk);
+  }
+  const keys = [...S.chunks.keys()].sort(); let last = keys.slice(-1)[0];
+  for (const nm of R.newMembers) {
+    if (!last || S.chunks.get(last).length >= 1000) { last = 'c' + String(keys.length ? Number(keys.slice(-1)[0].slice(1)) + 1 : 0).padStart(3, '0'); keys.push(last); S.chunks.set(last, []); }
+    const m = { code: nm.code, name: nm.name, g: nm.g, phones: nm.phones, ids: nm.ids, birth: nm.birth, p: [pid], chunk: last };
+    S.chunks.get(last).push(m); S.members.push(m); changed.add(last);
+  }
+  splitBig(changed);
+  S.projects.push(proj); S.nextCode = R.next; sortProjects();
+  await saveProjects();
+  await writeChunks([...changed]);
+}
+$('add').addEventListener('click', async () => {
+  const R = S.result; if (!R || !S.canWrite) return;
+  if (writing) { say('عملية حفظ أخرى جارية، انتظر حتى تنتهي.', true); return; }
+  const name = $('p-name').value.trim(); if (!name) return;
+  const btn = $('add'); btn.disabled = true;
+  try {
+    const pid = 'u' + Date.now().toString(36);
+    const year = Number($('p-year').value) || new Date().getFullYear();
+    const dates = R.out.map((x) => x.date).filter(Boolean).sort();
+    const proj = { id: pid, name, family: $('p-fam').value.trim() || name, type: $('p-type').value, year, start: dates.length ? dates[Math.floor(dates.length * .05)].slice(0, 7) : `${year}-06`, rows: S.rows.length, source: 'upload', added: new Date().toISOString(), file: S.file };
+    await commitImport(R, proj);
+    reindex(); S.rows = []; S.result = null; $('res').hidden = true; $('map').hidden = true;
+    renderAll();
+    say(`تمت إضافة «${name}»: ${fmt(R.touched.size ? [...R.touched.values()].filter((t) => R.codes.has(t.m.code)).length : 0)} عضو موجود و${fmt(R.newMembers.length)} عضو جديد.`);
+  } catch (e) {
+    say(e && e.code === 'quota_exceeded' ? 'امتلأت سعة القاعدة. احذف مشروعاً قديماً ثم أعد المحاولة.' : `تعذر إكمال الحفظ (${(e && (e.code || e.message)) || 'خطأ غير معروف'}). إن ظهر المشروع في تبويب المشاريع فاحذفه ثم أعد الرفع.`, true);
+    await load().catch(() => {});
+  } finally { btn.disabled = false; }
+});
+let writing = false;
+async function deleteProjects(ids) {
+  if (writing) { say('عملية حفظ أخرى جارية، انتظر حتى تنتهي.', true); return false; }
+  writing = true; renderProjects();
+  try {
+    say('جاري تحميل أحدث نسخة من القاعدة…');
+    await load();
+    const gone = new Set(ids);
+    const names = S.projects.filter((p) => gone.has(p.id)).map((p) => p.name);
+    S.projects = S.projects.filter((p) => !gone.has(p.id));
+    const valid = new Set(S.projects.map((p) => p.id));
+    const changed = new Set();
+    for (const [cid, arr] of S.chunks) {
+      const keep = []; let ch = false;
+      for (const m of arr) { const np = m.p.filter((x) => valid.has(x)); if (np.length !== m.p.length) { m.p = np; ch = true; } if (m.p.length) keep.push(m); else ch = true; }
+      if (ch) { S.chunks.set(cid, keep); changed.add(cid); }
+    }
+    await writeChunks([...changed]);
+    await saveProjects();
+    writing = false; S.delSel = new Set();
+    await load(); say(`حُذف ${names.length === 1 ? '«' + names[0] + '»' : fmt(names.length) + ' ملفات'}.`);
+    return true;
+  } catch (e) {
+    writing = false;
+    say(`تعذر إكمال الحذف (${(e && (e.code || e.message)) || 'خطأ'}). أعد المحاولة؛ الحذف يكمل من حيث توقف.`, true);
+    await load().catch(() => {}); return false;
+  } finally { writing = false; renderProjects(); }
+}
+function askDelete(p, cell) {
+  const box = el('div', null, 'confirm'); box.append(el('span', `حذف «${p.name}» من القاعدة؟`));
+  const yes = el('button', 'نعم، احذف', 'btn danger'); yes.type = 'button'; const no = el('button', 'إلغاء', 'btn'); no.type = 'button';
+  box.append(yes, no); cell.replaceChildren(box);
+  no.addEventListener('click', renderProjects);
+  yes.addEventListener('click', () => { yes.disabled = true; deleteProjects([p.id]); });
+}
+// ---------- Google Drive
+const DRIVE = 'Google Drive';
+const XMIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const G = { items: [], busy: false };
+function gsay(t, err) { const m = $('g-msg'); m.hidden = !t; m.textContent = t || ''; m.className = 'status' + (err ? ' err' : ''); }
+function fileIdFrom(url) {
+  const s = String(url || '').trim();
+  const m = s.match(/\/d\/([A-Za-z0-9_-]{20,})/) || s.match(/[?&]id=([A-Za-z0-9_-]{20,})/);
+  return m ? m[1] : (/^[A-Za-z0-9_-]{25,}$/.test(s) ? s : null);
+}
+function driveError(e) {
+  const c = e && e.code;
+  if (c === 'server_not_connected') return 'Google Drive غير مربوط بحسابك. أضفه من إعدادات claude.ai ← Connectors ثم أعد المحاولة.';
+  if (c === 'needs_reauth') return 'انتهت صلاحية ربط Google Drive. أعد ربطه من إعدادات claude.ai ← Connectors.';
+  if (c === 'not_in_manifest') return 'لم تسمح لهذه الصفحة باستخدام Google Drive. فعّله من قائمة الصلاحيات في الصفحة.';
+  if (c === 'selection_required') return 'لديك أكثر من حساب Google Drive مربوط. اختر واحداً من الرسالة التي تظهر لك.';
+  if (c === 'tool_error') return 'لا يمكن فتح الملف من حسابك (قد لا يكون مشاركاً معك أو كبيراً جداً).';
+  if (c === 'server_unavailable' || c === 'upstream_error') return 'تعذر الاتصال بـ Google Drive الآن. حاول بعد قليل.';
+  return 'تعذر قراءة الملف' + (c ? ` (${c})` : '') + '.';
+}
+async function driveBook(fileId) {
+  let res;
+  for (let t = 0; ; t++) {
+    try { res = await S.mcp.callTool(DRIVE, 'download_file_content', { fileId, exportMimeType: XMIME }, { cache: false }); break; }
+    catch (e) { if (t === 0 && e && e.retryable) { await wait((e.retryAfterMs || 1500) + Math.random() * 500); continue; } throw e; }
+  }
+  const p = res.payload; const b64 = p && typeof p === 'object' ? (p.content || p.data) : null;
+  if (!b64) throw { code: 'empty' };
+  return { wb: XLSX.read(b64, { type: 'base64', cellDates: true }), title: p.title || '' };
+}
+function indexLinks(wb) {
+  const out = [];
+  for (const n of wb.SheetNames) {
+    const ws = wb.Sheets[n]; if (!ws['!ref']) continue;
+    const rg = XLSX.utils.decode_range(ws['!ref']);
+    const hdr = []; for (let c = rg.s.c; c <= rg.e.c; c++) { const v = ws[XLSX.utils.encode_cell({ r: rg.s.r, c })]; hdr[c] = v ? String(v.v ?? '') : ''; }
+    const tCol = hdr.findIndex((h) => /اسم الملف|العنوان|title|name/i.test(h)); const cCol = hdr.findIndex((h) => /التصنيف|category/i.test(h));
+    for (let r = rg.s.r + 1; r <= rg.e.r; r++) {
+      let link = null, longest = '';
+      for (let c = rg.s.c; c <= rg.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })]; if (!cell) continue;
+        const tgt = (cell.l && cell.l.Target) || ((cell.f || '').match(/HYPERLINK\("([^"]+)"/i) || [])[1];
+        if (tgt && fileIdFrom(tgt)) link = tgt;
+        const v = String(cell.v ?? ''); if (v.length > longest.length && !/^https?:/.test(v)) longest = v;
+      }
+      if (!link) continue;
+      const cell = (c) => { const x = c >= 0 ? ws[XLSX.utils.encode_cell({ r, c })] : null; return x ? String(x.v ?? '') : ''; };
+      out.push({ id: fileIdFrom(link), url: link, title: cell(tCol) || longest, cat: cell(cCol) });
+    }
+  }
+  return out;
+}
+function existingKeys() {
+  const k = new Set();
+  S.projects.forEach((p) => { [p.name, p.file, ...(p.alias || [])].forEach((x) => { if (x) { k.add(normName(cleanTitle(x))); k.add(normName(guessMeta(x).name)); } }); });
+  k.delete(''); return k;
+}
+const GST = { new: ['جديد', 'new'], added: ['موجود في القاعدة', 'ret'], dupe: ['نسخة مكررة في القائمة', 'dup'], hours: ['ساعات / حضور', 'dup'], self: ['ملف من النظام نفسه', 'dup'], copy: ['نسخة من ملف موجود', 'dup'], reading: ['جاري القراءة…', 'dup'], ready: ['جاهز للإضافة', 'new'], fail: ['تعذر', 'bad'], done: ['أُضيف ✓', 'ret'] };
+function classify(items) {
+  const keys = existingKeys(); const seen = new Set();
+  items.forEach((it) => {
+    const k1 = normName(cleanTitle(it.title)), k2 = normName(guessMeta(it.title).name);
+    it.meta = guessMeta(it.title); it.year = titleYear(it.title);
+    if (/الموحدة/.test(it.title)) it.st = 'self';
+    else if (/ساعات|حضور|تحضير|شهادات/.test(it.cat + ' ' + it.title)) it.st = 'hours';
+    else if (keys.has(k1) || keys.has(k2)) it.st = 'added';
+    else if (seen.has(k2)) it.st = 'dupe';
+    else it.st = 'new';
+    seen.add(k2); it.on = it.st === 'new';
+  });
+}
+function renderG() {
+  const box = $('g-box'); box.hidden = !G.items.length;
+  const c = (s) => G.items.filter((x) => x.st === s).length;
+  $('g-title').textContent = `الملفات (${fmt(G.items.length)})`;
+  $('g-sum').textContent = `جديد: ${fmt(c('new') + c('ready'))} · موجود في القاعدة: ${fmt(c('added'))} · نسخ مكررة: ${fmt(c('dupe'))} · ساعات وحضور: ${fmt(c('hours'))}${c('done') ? ` · أُضيف: ${fmt(c('done'))}` : ''}${c('fail') ? ` · تعذر: ${fmt(c('fail'))}` : ''}. المحدد افتراضياً هو الجديد فقط، وتقدر تغيّر التحديد.`;
+  $('g-rows').replaceChildren(...G.items.map((it, i) => {
+    const tr = el('tr');
+    const cb = el('input'); cb.type = 'checkbox'; cb.checked = !!it.on; cb.disabled = it.st === 'done' || G.busy; cb.setAttribute('aria-label', 'تحديد ' + it.title);
+    cb.addEventListener('change', () => { it.on = cb.checked; updG(); });
+    const t0 = el('td'); t0.append(cb);
+    const t1 = el('td'); const a = el('a', cleanTitle(it.title)); a.href = it.url; a.target = '_blank'; a.rel = 'noopener'; a.style.color = 'inherit'; t1.append(a);
+    const st = el('td'); st.append(el('span', GST[it.st][0], 'pill ' + GST[it.st][1]));
+    const ty = el('td'); const sel = el('select'); ['مشروع', 'لجان', 'عضوية'].forEach((x) => sel.append(new Option(x))); sel.value = it.meta.type; sel.disabled = it.st === 'done'; sel.addEventListener('change', () => { it.meta.type = sel.value; }); ty.append(sel);
+    const yr = el('td'); const yi = el('input'); yi.type = 'number'; yi.min = 2010; yi.max = 2040; yi.style.width = '5.5rem'; yi.value = it.year || ''; yi.placeholder = '—'; yi.disabled = it.st === 'done'; yi.addEventListener('change', () => { it.year = Number(yi.value) || null; updG(); }); yr.append(yi);
+    tr.append(t0, t1, el('td', it.cat, 'hide-n mut'), st, ty, yr, el('td', it.res || '', 'mut'));
+    return tr;
+  }));
+  updG();
+}
+function updG() {
+  $('g-scan').disabled = G.busy || !G.items.some((x) => x.on && x.st !== 'done');
+  $('g-add').disabled = G.busy || !S.canWrite || !G.items.some((x) => x.on && (x.st === 'ready' || x.st === 'copy') && x.year);
+  $('g-all').checked = G.items.length && G.items.every((x) => x.on || x.st === 'done');
+}
+$('g-all').addEventListener('change', (e) => { G.items.forEach((x) => { if (x.st !== 'done') x.on = e.target.checked; }); renderG(); });
+$('g-list').addEventListener('click', async () => {
+  if (!S.mcp) { gsay('ربط Google Drive غير متاح في هذا العرض. افتح الصفحة من claude.ai وأنت مسجل الدخول.', true); return; }
+  const id = fileIdFrom($('g-url').value); if (!id) { gsay('الرابط غير صحيح. الصق رابط ملف من Google Drive أو Google Sheets.', true); return; }
+  const btn = $('g-list'); btn.disabled = true; gsay('جاري قراءة الرابط…');
+  try {
+    const { wb, title } = await driveBook(id);
+    const links = indexLinks(wb);
+    if (links.length >= 2) { G.items = links; gsay(`وجدنا ${fmt(links.length)} رابطاً في «${cleanTitle(title)}».`); }
+    else { G.items = [{ id, url: $('g-url').value.trim(), title, cat: '' }]; G.cache = { [id]: wb }; gsay(''); }
+    classify(G.items); renderG();
+  } catch (e) { gsay(e && e.code === 'empty' ? 'وصل الملف فارغاً.' : driveError(e), true); }
+  finally { btn.disabled = false; }
+});
+$('g-scan').addEventListener('click', async () => {
+  if (G.busy) return; G.busy = true; renderG();
+  const list = G.items.filter((x) => x.on && x.st !== 'done');
+  let i = 0;
+  for (const it of list) {
+    i++; gsay(`جاري قراءة الملف ${i} من ${list.length}: ${cleanTitle(it.title)}`);
+    it.st = 'reading'; it.res = ''; renderG();
+    try {
+      const wb = (G.cache && G.cache[it.id]) || (await driveBook(it.id)).wb;
+      const pb = parseBook(wb);
+      if (pb.map.name.mode === 'none') { it.st = 'fail'; it.res = 'لم نجد عمود الاسم'; it.on = false; }
+      else if (pb.map.phone.mode === 'none' && pb.map.nid.mode === 'none') { it.st = 'fail'; it.res = 'لا يوجد عمود جوال ولا هوية'; it.on = false; }
+      else {
+        const R = computeCompare(pb.rows, pb.map); const n = (s) => R.out.filter((x) => x.st === s).length;
+        it.pb = pb; it.st = 'ready'; if (!it.year) it.year = pb.tsYear || null;
+        it.res = `${fmt(pb.rows.length)} صف: ${fmt(n('ret'))} موجود، ${fmt(n('new'))} جديد، ${fmt(n('bad'))} مستبعد · ${pb.sheet === '__all__' ? 'كل الأوراق' : 'ورقة «' + pb.sheet + '»'}` + (it.year ? '' : ' · حدد السنة');
+        const mine = new Set(R.out.filter((x) => x.st === 'ret').map((x) => x.code)); const total = n('ret') + n('new');
+        if (total >= 20 && mine.size / total >= 0.95) {
+          const cnt = new Map(); for (const m of S.members) if (mine.has(m.code)) for (const q of m.p) cnt.set(q, (cnt.get(q) || 0) + 1);
+          const best = [...cnt].sort((a, b) => b[1] - a[1])[0]; const bp = best && S.projects.find((p) => p.id === best[0]);
+          if (bp && best[1] / total >= 0.95) { it.st = 'copy'; it.on = false; it.res = `${fmt(Math.round(best[1] / total * 100))}% من أسمائه موجودة في «${bp.name}». غالباً نسخة أو تصفية منه، فلن يُضاف إلا إذا حددته.`; it.pb = pb; }
+        }
+      }
+    } catch (e) { it.st = 'fail'; it.res = e && e.code === 'empty' ? 'وصل فارغاً' : driveError(e); it.on = false; }
+    renderG(); await wait(300);
+  }
+  G.busy = false; renderG();
+  gsay(`انتهت القراءة. راجع النوع والسنة لكل ملف، ثم اضغط «إضافة الملفات الجاهزة».`);
+});
+$('g-add').addEventListener('click', async () => {
+  if (G.busy || !S.canWrite) return; if (writing) { gsay('عملية حفظ أخرى جارية، انتظر حتى تنتهي.', true); return; } G.busy = true; renderG();
+  const list = G.items.filter((x) => x.on && (x.st === 'ready' || x.st === 'copy') && x.pb && x.year);
+  let i = 0, ok = 0;
+  for (const it of list) {
+    i++; gsay(`جاري إضافة الملف ${i} من ${list.length}: ${cleanTitle(it.title)}`);
+    try {
+      const R = computeCompare(it.pb.rows, it.pb.map);
+      let name = it.meta.name; if (S.projects.some((p) => normName(p.name) === normName(name))) name = `${name} (${it.year})`;
+      const year = it.year || new Date().getFullYear();
+      const proj = { id: 'u' + Date.now().toString(36) + i, name, family: it.meta.family, type: it.meta.type, year, start: it.pb.start || `${year}-06`, rows: it.pb.rows.length, source: 'drive', added: new Date().toISOString(), file: cleanTitle(it.title), fileId: it.id };
+      await commitImport(R, proj); reindex();
+      it.st = 'done'; it.on = false; it.pb = null; ok++;
+      it.res = `أُضيف: ${fmt(R.touched.size ? [...R.touched.values()].filter((t) => R.codes.has(t.m.code)).length : 0)} موجود و${fmt(R.newMembers.length)} جديد`;
+    } catch (e) {
+      it.st = 'fail'; it.on = false; it.res = `تعذر الحفظ (${(e && (e.code || e.message)) || 'خطأ'})`;
+      await load().catch(() => {}); renderG(); break;
+    }
+    renderG();
+  }
+  G.busy = false; renderAll(); renderG();
+  gsay(`تمت إضافة ${fmt(ok)} من ${fmt(list.length)} ملف.`);
+});
+
+// ---------- downloads
+function book(sheets) {
+  const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
+  sheets.forEach(([name, aoa, widths]) => { const ws = XLSX.utils.aoa_to_sheet(aoa); if (widths) ws['!cols'] = widths.map((w) => ({ wch: w })); XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31)); });
+  return new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })]);
+}
+async function save(filename, blob) {
+  if (!S.downloads) { say('التحميل غير متاح في هذا العرض.', true); return; }
+  try { await S.downloads.save({ filename, data: blob }); say(''); }
+  catch (e) { if (e && e.code !== 'declined') say('تعذر تحميل الملف.', true); }
+}
+let dlBusy = false;
+$('dl-all').addEventListener('click', async () => {
+  if (!S.loaded || !window.XLSX || dlBusy) return;
+  dlBusy = true; const btn = $('dl-all'); btn.disabled = true; const label = btn.textContent;
+  const step = async (t) => { say(t); btn.textContent = '⏳ ' + t; await wait(30); };
+  try {
+    await step('جاري ترتيب الأعضاء…');
+    const ps = S.projects; const today = new Date().toISOString().slice(0, 10);
+    const sorted = S.members.slice().sort((a, b) => b.c.p_all - a.c.p_all || b.c.t_all - a.c.t_all || b.years - a.years || a.code.localeCompare(b.code));
+    let rank = 0, prev = null;
+    const mem = [['رقم العضو', 'الترتيب', 'الاسم', 'الجنس', 'الجوال', 'جوالات أخرى', 'رقم الهوية', 'تاريخ الميلاد', 'عدد المشاريع', 'إجمالي التسجيلات', 'عدد السنوات', 'أول تسجيل', 'آخر تسجيل', 'المشاريع']];
+    sorted.forEach((m, i) => { if (m.c.p_all !== prev) { rank = i + 1; prev = m.c.p_all; }
+      mem.push([m.code, rank, m.name, m.g || 'غير محدد', m.phones[0] || '', m.phones.slice(1).join('، '), m.ids.join('، '), m.birth, m.c.p_all, m.c.t_all, m.years, m.ord.length ? ps[m.ord[0]].name : '', m.ord.length ? ps[m.ord[m.ord.length - 1]].name : '', m.ord.map((j) => ps[j].name).join('، ')]); });
+    await step('جاري تجهيز التسجيلات…');
+    const regs = [['رقم العضو', 'المشروع', 'النوع', 'السنة']];
+    sorted.forEach((m) => m.ord.forEach((j) => { const p = ps[j]; regs.push([m.code, p.name, p.type, p.year]); }));
+    const { reg, fresh } = projectStats();
+    const pr = [['المشروع', 'الفئة', 'النوع', 'السنة', 'المسجلون', 'جدد', 'عائدون', 'صفوف الملف الأصلي', 'المصدر']];
+    ps.forEach((p, i) => pr.push([p.name, p.family, p.type, p.year, reg[i], fresh[i], reg[i] - fresh[i], p.rows || '', p.source === 'base' ? 'الدمج الأول' : (p.source === 'drive' ? 'Drive: ' : 'رفع: ') + (p.file || '')]));
+    const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
+    const add = (name, aoa, w) => { const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = w.map((x) => ({ wch: x })); XLSX.utils.book_append_sheet(wb, ws, name); };
+    await step(`جاري كتابة ورقة الأعضاء (${fmt(mem.length - 1)})…`); add('الأعضاء', mem, [11, 8, 28, 9, 13, 16, 14, 12, 10, 12, 10, 22, 22, 60]);
+    await step(`جاري كتابة ورقة التسجيلات (${fmt(regs.length - 1)})…`); add('التسجيلات', regs, [11, 34, 9, 7]);
+    add('المشاريع', pr, [30, 14, 9, 7, 10, 8, 9, 14, 30]);
+    await step('جاري ضغط الملف…');
+    const blob = new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array', compression: true, bookSST: true })]);
+    btn.textContent = label;
+    await save(`قاعدة بيانات التسجيل الموحدة - احتواء ${today}.xlsx`, blob);
+  } catch (e) { say('تعذر تجهيز الملف. أعد المحاولة، وإن تكرر أخبرني.', true); }
+  finally { dlBusy = false; btn.disabled = false; btn.textContent = label; }
+});
+$('dl-rep').addEventListener('click', async () => {
+  const R = S.result; if (!R) return;
+  const o = overlapSets(); const p = S.projects.find((x) => x.id === o.pid);
+  const label = { ret: 'موجود في القاعدة', new: 'عضو جديد', dup: 'مكرر في الملف', bad: 'مستبعد' };
+  const rows = [['رقم الصف', 'الاسم كما ورد', 'الجوال', 'الهوية', 'الحالة', 'السبب', 'رقم العضو', 'تسجيلاته السابقة', `مسجل في ${p ? p.name : 'المشروع المقارن'}`]];
+  const oldSet = new Set(S.members.filter((m) => m.p.includes(o.pid)).map((m) => m.code));
+  R.out.forEach((x) => rows.push([x.n, x.name, x.phone, x.id, label[x.st], x.why || '', x.code || '', x.st === 'ret' ? x.prev : '', x.code && oldSet.has(x.code) ? 'نعم' : '']));
+  const old = [['رقم العضو', 'الاسم', 'الجوال', 'عدد مشاريعه']]; o.onlyOld.forEach((m) => old.push([m.code, m.name, m.phones[0] || '', m.c.p_all]));
+  const sum = [['البند', 'العدد'], ['صفوف الملف', S.rows.length], ['موجودون في القاعدة', R.out.filter((x) => x.st === 'ret').length], ['أعضاء جدد', R.out.filter((x) => x.st === 'new').length], ['مكرر داخل الملف', R.out.filter((x) => x.st === 'dup').length], ['مستبعد', R.out.filter((x) => x.st === 'bad').length], [`مشتركون مع ${p ? p.name : ''}`, o.both.length], [`في ${p ? p.name : ''} وليسوا في هذا الملف`, o.onlyOld.length]];
+  await save(`مقارنة - ${$('p-name').value.trim() || 'ملف'}.xlsx`, book([['الملخص', sum, [36, 10]], ['نتيجة كل صف', rows, [8, 28, 13, 13, 16, 18, 11, 12, 16]], [`في ${p ? p.name : 'السابق'} فقط`, old, [11, 28, 13, 10]]]));
+});
+
+// ---------- boot
+(async () => {
+  const [db, user, dl, mcp] = await Promise.all([claude.use('db'), claude.use('user'), claude.use('downloads'), claude.use('mcp')]);
+  S.mcp = mcp;
+  S.db = db; S.user = user; S.downloads = dl;
+  $('dl-all').hidden = !dl;
+  if (!db) { $('v-dash').replaceChildren(el('div', 'لا يمكن الوصول إلى قاعدة البيانات في هذا العرض. افتح الصفحة وأنت مسجل الدخول في Claude.', 'empty')); return; }
+  S.canWrite = user ? (user.canEdit ? await user.canEdit() : false) || (await user.isOwner?.()) : false;
+  try { await load(); if (!S.members.length) say('القاعدة فارغة حالياً. ارفع أول ملف تسجيل من تبويب «رفع ملف ومقارنته».'); }
+  catch (e) { say('تعذر تحميل القاعدة. أعد فتح الصفحة.', true); }
+})();
+})();
+</script>
+
+
+</body></html>
