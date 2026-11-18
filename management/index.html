@@ -1,0 +1,1293 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>نظام إدارة احتواء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Ihtiwa identity: navy #2F6AA2, sky #9ACCED, sun #FBB24C, coral #F27362, gray #97989C (from the logo).
+   Layout: navy sidebar with the logo and a four-colour brand rule; work area of flat white panels on a cool grey ground. */
+:root {
+  --bg: #F3F5F8; --panel: #FFFFFF; --fg: #172433; --muted: #5E6B7A; --line: #E2E7EE; --hover: #F1F4F8; --soft: #F7F9FB;
+  --accent: #2F6AA2; --accent-ink: #1F4E7C; --accent-soft: #E6F0FA; --on-accent: #FFFFFF;
+  --sky: #9ACCED; --sun: #FBB24C; --coral: #F27362; --stone: #97989C;
+  --good: #2E7D55; --good-soft: #E3F3EA; --warn: #B56A0F; --warn-soft: #FDF1DF; --bad: #C0473A; --bad-soft: #FBE7E4;
+  --s-internal: #2F6AA2; --s-nfhm: #E2604D; --s-eid: #D98E1F; --s-kiswa: #3E9A9D; --s-taib: #4F8F5C; --s-extra: #7D8590;
+  --side: #163A5F; --side-2: #12304F; --side-fg: #DCE7F2; --side-muted: #8FAAC6; --side-hi: rgba(255,255,255,.08);
+  --f-body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --f-display: "Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --r: 12px; --sh: 0 1px 2px rgba(23,36,51,.05);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E141C; --panel: #151E29; --fg: #E5ECF4; --muted: #96A4B5; --line: #243142; --hover: #1B2633; --soft: #121A24;
+  --accent: #6FA8DC; --accent-ink: #9CC6EC; --accent-soft: #182B40; --on-accent: #0E141C;
+  --good: #6CC48F; --good-soft: #15291E; --warn: #E8A94F; --warn-soft: #2E2416; --bad: #EE8577; --bad-soft: #33201D;
+  --s-internal: #6FA8DC; --s-nfhm: #F28A79; --s-eid: #F0B35A; --s-kiswa: #6CC2C5; --s-taib: #7FBE8B; --s-extra: #A3AAB4;
+  --side: #0B1A2B; --side-2: #091523; --sh: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E141C; --panel: #151E29; --fg: #E5ECF4; --muted: #96A4B5; --line: #243142; --hover: #1B2633; --soft: #121A24;
+  --accent: #6FA8DC; --accent-ink: #9CC6EC; --accent-soft: #182B40; --on-accent: #0E141C;
+  --good: #6CC48F; --good-soft: #15291E; --warn: #E8A94F; --warn-soft: #2E2416; --bad: #EE8577; --bad-soft: #33201D;
+  --s-internal: #6FA8DC; --s-nfhm: #F28A79; --s-eid: #F0B35A; --s-kiswa: #6CC2C5; --s-taib: #7FBE8B; --s-extra: #A3AAB4;
+  --side: #0B1A2B; --side-2: #091523; --sh: none; color-scheme: dark; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
+h1, h2, h3, h4 { font-family: var(--f-display); margin: 0; text-wrap: balance; font-weight: 600; }
+a { color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* shell */
+.shell { direction: rtl; display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+.side { background: linear-gradient(180deg, var(--side), var(--side-2)); color: var(--side-fg); position: sticky; top: 0; height: 100vh; box-sizing: border-box; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; min-width: 0; }
+.brand-rule { display: grid; grid-template-columns: repeat(4, 1fr); height: 4px; margin: 0 -14px; flex: none; }
+.brand-rule i:nth-child(1) { background: var(--sun); } .brand-rule i:nth-child(2) { background: var(--sky); } .brand-rule i:nth-child(3) { background: var(--coral); } .brand-rule i:nth-child(4) { background: #2F6AA2; }
+.brand-blk { display: flex; align-items: center; gap: 12px; padding: 6px 4px 0; }
+.mark { width: 46px; height: 46px; border-radius: 11px; flex: none; background: #fff; padding: 3px; box-sizing: border-box; object-fit: contain; }
+.brand-tx h1 { font-size: 1.15rem; font-weight: 700; color: #fff; line-height: 1.3; }
+.brand-tx p { margin: 0; font-size: .76rem; color: var(--side-muted); }
+.tabs { display: grid; gap: 2px; }
+.tabs button { font: inherit; display: flex; align-items: center; gap: 12px; width: 100%; text-align: start; color: var(--side-fg); background: transparent; border: 0; padding: 10px 12px; border-radius: 9px; font-size: .92rem; cursor: pointer; position: relative; }
+.tabs button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; opacity: .8; }
+.tabs button:hover { background: var(--side-hi); }
+.tabs button[aria-selected="true"] { background: #fff; color: #163A5F; font-weight: 600; }
+.tabs button[aria-selected="true"] svg { opacity: 1; color: #2F6AA2; }
+.side-sec { display: grid; gap: 8px; padding: 0 4px; }
+.side-lab { font-size: .7rem; letter-spacing: .05em; color: var(--side-muted); font-weight: 600; }
+.calseg { display: flex; border-radius: 9px; overflow: hidden; background: var(--side-hi); }
+.calseg button { font: inherit; flex: 1; font-size: .8rem; background: transparent; color: var(--side-fg); border: 0; padding: 7px 4px; cursor: pointer; }
+.calseg button[aria-pressed="true"] { background: var(--sun); color: #3A2A0B; font-weight: 600; }
+.side-links { margin-top: auto; border-top: 1px solid rgba(255,255,255,.08); padding-top: 14px; }
+.side-links a { color: var(--side-fg); text-decoration: none; font-size: .86rem; padding: 7px 8px; border-radius: 8px; display: flex; justify-content: space-between; }
+.side-links a:hover { background: var(--side-hi); }
+
+/* work area */
+.app { direction: rtl; max-width: 1300px; width: 100%; box-sizing: border-box; padding-block: 28px 64px; padding-right: 32px; padding-left: max(32px, env(safe-area-inset-left, 0px)); display: grid; gap: 20px; align-content: start; min-width: 0; }
+.pagehead { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.eyebrow { margin: 0; font-size: .74rem; color: var(--accent); font-weight: 600; letter-spacing: .03em; }
+.pagehead h2 { font-size: 1.7rem; font-weight: 700; margin: 2px 0 2px; }
+.pagehead #sub { margin: 0; color: var(--muted); font-size: .88rem; }
+.today-chip { font-size: .82rem; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; white-space: nowrap; }
+.view { display: grid; gap: 20px; }
+@media (prefers-reduced-motion: no-preference) { .view { animation: fade .18s ease-out; } @keyframes fade { from { opacity: .4; transform: translateY(3px); } to { opacity: 1; transform: none; } } }
+
+/* hero (home) */
+.hero { background: linear-gradient(135deg, #1F4E7C, #2F6AA2 60%, #3B7DB8); color: #fff; border-radius: 14px; padding: 22px 24px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr); gap: 20px 28px; align-items: center; position: relative; overflow: hidden; }
+.hero::after { content: ""; position: absolute; inset-inline-end: -60px; top: -60px; width: 220px; height: 220px; border-radius: 40px; transform: rotate(45deg); border: 18px solid rgba(255,255,255,.06); pointer-events: none; }
+.hero .eyebrow { color: var(--sun); }
+.hero h3 { font-size: 1.45rem; font-weight: 700; margin: 4px 0; }
+.hero p { margin: 0; color: #D6E6F5; font-size: .9rem; }
+.hero .kpis { position: relative; z-index: 1; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.hero .kpi { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14); box-shadow: none; padding: 12px 14px; }
+.hero .kpi .v { color: #fff; font-size: 1.6rem; } .hero .kpi .l { color: #CFE1F2; }
+.hero .kpi.bad .v { color: #FFC2B8; } .hero .kpi.warn .v { color: var(--sun); } .hero .kpi.good .v { color: #BFF0D2; }
+
+/* generic */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: grid; gap: 14px; min-width: 0; align-content: start; box-shadow: var(--sh); }
+.head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.card > .head:first-child { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.card > .head h2, .card > h2 { font-size: 1.05rem; font-weight: 600; }
+.note { color: var(--muted); font-size: .84rem; margin: 0; }
+.status { font-size: .88rem; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+.status.err { background: var(--bad-soft); color: var(--bad); border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
+.btn { font: inherit; font-size: .86rem; border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 6px 14px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 500; }
+.btn:hover { background: var(--hover); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { background: var(--accent-ink); }
+.btn.danger { color: var(--bad); border-color: var(--bad); background: transparent; }
+.btn.sm { padding: 3px 10px; font-size: .8rem; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; align-content: start; }
+.kpi .v { font-family: var(--f-display); font-size: 1.7rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.kpi .l { color: var(--muted); font-size: .8rem; }
+.kpi.bad .v { color: var(--bad); } .kpi.warn .v { color: var(--warn); } .kpi.good .v { color: var(--good); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: .82rem; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 8px; padding: 5px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.chip:hover { background: var(--hover); }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.chip .n { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .76rem; }
+.dot { width: 9px; height: 9px; border-radius: 3px; background: var(--sc); flex: none; display: inline-block; }
+input[type=search], input[type=text], input[type=number], input[type=date], select, textarea { font: inherit; font-size: .9rem; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); min-width: 0; width: 100%; box-sizing: border-box; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { min-height: 70px; resize: vertical; }
+.controls select, .controls input[type=search] { width: auto; }
+input[type=search] { flex: 1 1 200px; }
+.pill { display: inline-block; font-size: .74rem; border-radius: 6px; padding: 1px 8px; white-space: nowrap; background: var(--hover); color: var(--muted); font-weight: 500; }
+.pill.good { background: var(--good-soft); color: var(--good); } .pill.warn { background: var(--warn-soft); color: var(--warn); } .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.acc { background: var(--accent-soft); color: var(--accent-ink); }
+.sec-tag { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--sw); margin-inline-end: 6px; vertical-align: -1px; }
+.empty { text-align: center; padding: 28px 16px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; background: var(--soft); }
+.hint { font-size: .74rem; color: var(--muted); min-height: 1em; }
+.ro-note { font-size: .8rem; color: var(--muted); }
+.mut { color: var(--muted); } .nw { white-space: nowrap; } .num { font-weight: 600; }
+.linkish { font: inherit; background: none; border: 0; padding: 0; color: var(--fg); cursor: pointer; text-align: start; font-weight: 500; }
+.linkish:hover { color: var(--accent); text-decoration: underline; }
+
+/* section strip (home) */
+.secs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; }
+.sec { font: inherit; text-align: start; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-inline-start: 4px solid var(--sc); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; cursor: pointer; align-content: start; }
+.sec > .l:first-child { font-size: .78rem; color: var(--muted); }
+.sec > .v { font-family: var(--f-display); font-weight: 700; font-size: 1.25rem; color: var(--sc); }
+.sec > .l:last-child { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); font-size: .76rem; color: var(--muted); }
+.sec:hover { background: var(--hover); }
+
+/* timeline */
+.tl-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.tl { min-width: 820px; display: grid; grid-template-columns: 150px repeat(12, minmax(0, 1fr)); font-size: .8rem; }
+.tl .qh { grid-row: 1; text-align: center; padding: 8px 0 2px; font-family: var(--f-display); font-weight: 600; color: var(--fg); border-inline-start: 1px solid var(--line); background: var(--soft); }
+.tl .yh { grid-row: 1; text-align: center; padding: 8px 0 2px; font-family: var(--f-display); font-weight: 600; border-inline-start: 1px solid var(--muted); background: var(--soft); }
+.tl .mh { grid-row: 2; text-align: center; color: var(--muted); padding-bottom: 6px; border-bottom: 1px solid var(--line); border-inline-start: 1px solid var(--line); background: var(--soft); font-size: .76rem; }
+.tl .corner { grid-row: 1 / span 2; border-bottom: 1px solid var(--line); background: var(--soft); }
+.tl .lab { grid-column: 1; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); font-weight: 500; }
+.tl .lane { grid-column: 2 / -1; position: relative; border-bottom: 1px solid var(--line); background-image: linear-gradient(to left, var(--line) 1px, transparent 1px); background-size: calc(100% / 12) 100%; background-position: right; min-height: 40px; }
+.tl .lane.qline { background-image: linear-gradient(to left, var(--line) 1px, transparent 1px), linear-gradient(to left, color-mix(in srgb, var(--muted) 60%, transparent) 1px, transparent 1px); background-size: calc(100% / 12) 100%, 25% 100%; }
+.bar { position: absolute; height: 22px; border-radius: 6px; background: color-mix(in srgb, var(--sc) 18%, var(--panel)); border: 0; border-inline-start: 3px solid var(--sc); color: var(--fg); padding-inline: 7px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; font: inherit; font-size: .74rem; font-weight: 500; text-align: start; line-height: 22px; box-sizing: border-box; }
+.bar:hover { background: color-mix(in srgb, var(--sc) 32%, var(--panel)); }
+.bar.pending { border: 1px dashed var(--sc); border-inline-start: 3px solid var(--sc); }
+.bar.brk { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--sc) 24%, var(--panel)) 0 6px, color-mix(in srgb, var(--sc) 10%, var(--panel)) 6px 12px); }
+.today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--bad); opacity: .7; pointer-events: none; }
+.eidline { position: absolute; top: 0; bottom: 0; width: 0; border-inline-start: 2px dotted var(--s-eid); pointer-events: none; }
+.tl .hlab { grid-column: 1; padding: 4px 12px; font-size: .76rem; color: var(--muted); border-bottom: 1px solid var(--line); display: flex; align-items: center; }
+.tl .hrow { grid-column: 2 / -1; position: relative; height: 30px; border-bottom: 1px solid var(--line); }
+.hm { position: absolute; top: 4px; bottom: 4px; border-inline-start: 1px solid var(--line); font-size: .72rem; color: var(--muted); display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; box-sizing: border-box; padding-inline: 2px; }
+.hm.hot { background: color-mix(in srgb, var(--sun) 20%, transparent); color: var(--fg); border-radius: 5px; font-weight: 500; }
+.school { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--line); border-inline-start: 4px solid var(--s-nfhm); border-radius: 10px; background: var(--soft); min-width: 0; }
+.conf { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; padding: 9px 12px; border-radius: 8px; background: var(--warn-soft); border-inline-start: 3px solid var(--warn); font-size: .88rem; }
+
+/* quarters board */
+.quarters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.quarter { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; align-content: start; }
+.quarter .qt { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.quarter .qt span { color: var(--muted); font-size: .78rem; }
+.pcard { font: inherit; text-align: start; background: var(--panel); border: 1px solid var(--line); border-inline-start: 3px solid var(--sc); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; cursor: pointer; color: var(--fg); width: 100%; }
+.pcard:hover { border-color: var(--sc); }
+.pcard .t { font-weight: 600; font-size: .9rem; }
+.pcard .m { font-size: .76rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+
+/* projects */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 12px; }
+.proj { font: inherit; text-align: start; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--sc); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; cursor: pointer; align-content: start; }
+.proj:hover { box-shadow: 0 4px 16px rgba(23,36,51,.08); }
+.proj .t { font-family: var(--f-display); font-weight: 600; font-size: 1rem; }
+.proj .row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: .8rem; color: var(--muted); }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--sc, var(--accent)); border-radius: 3px; }
+
+/* tables */
+.tbox { overflow: auto; border: 1px solid var(--line); border-radius: 10px; max-height: 640px; background: var(--panel); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .86rem; }
+th { position: sticky; top: 0; background: var(--soft); text-align: start; font-weight: 600; color: var(--muted); font-size: .76rem; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; z-index: 1; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: var(--hover); }
+tr.late td:first-child { box-shadow: inset -3px 0 0 var(--bad); }
+td select { width: auto; padding: 3px 8px; font-size: .8rem; }
+
+/* goals */
+.goals { display: grid; gap: 10px; }
+.goal { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.goal .t { font-weight: 600; font-family: var(--f-display); }
+.goal .m { font-size: .8rem; color: var(--muted); }
+.goal .nums { font-variant-numeric: tabular-nums; font-size: .85rem; text-align: end; white-space: nowrap; display: grid; gap: 2px; justify-items: end; }
+.goal .nums b { font-family: var(--f-display); font-size: 1.2rem; color: var(--accent); }
+.gscale { grid-column: 1 / -1; position: relative; height: 8px; border-radius: 4px; background: var(--line); }
+.gscale .b { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; background: var(--sky); border-radius: 4px; }
+.gscale .a { position: absolute; top: -4px; width: 4px; height: 16px; background: var(--good); border-radius: 2px; }
+.gscale .tg { position: absolute; top: -5px; width: 3px; height: 18px; background: var(--fg); border-radius: 2px; }
+
+/* charts */
+.hbars { display: grid; gap: 7px; }
+.hbars .row { display: grid; grid-template-columns: minmax(6rem, 11rem) 1fr; gap: 10px; align-items: center; font-size: .82rem; }
+.hbars .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbars .track { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.hbars .s1 { height: 14px; background: var(--accent); border-radius: 0 4px 4px 0; }
+.hbars .s2 { height: 14px; background: var(--sun); border-radius: 4px 0 0 4px; }
+.hbars .s1:only-of-type, .hbars .s2:only-of-type { border-radius: 4px; }
+.hbars .sc { height: 14px; background: var(--sc); border-radius: 4px; }
+.hbars .val { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cols { display: flex; align-items: flex-end; gap: 14px; height: 160px; padding-top: 18px; border-bottom: 1px solid var(--line); }
+.cols .c { flex: 1; display: flex; flex-direction: column; align-items: stretch; position: relative; height: 100%; justify-content: flex-end; }
+.cols .c .lv { text-align: center; font-size: .78rem; font-variant-numeric: tabular-nums; }
+.cols .c .x { position: absolute; bottom: -22px; inset-inline: 0; text-align: center; font-size: .78rem; color: var(--muted); }
+.cols .c i { display: block; } .cols .c i.r { background: var(--accent); } .cols .c i.n { background: var(--sun); border-radius: 4px 4px 0 0; }
+.cols-wrap { padding-bottom: 26px; }
+
+/* committees */
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.com { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.com .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: .84rem; }
+.com .kv dt { color: var(--muted); } .com .kv dd { margin: 0; }
+
+/* drawer + modal */
+.overlay { position: fixed; inset: 0; background: rgba(13,26,40,.45); z-index: 20; display: flex; justify-content: flex-start; }
+.drawer { direction: rtl; background: var(--panel); width: min(560px, 100%); height: 100%; overflow-y: auto; box-sizing: border-box; padding: calc(20px + env(safe-area-inset-top, 0px)) 20px calc(28px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 14px; align-content: start; box-shadow: 0 0 40px rgba(0,0,0,.25); }
+.overlay.center { justify-content: center; align-items: flex-start; overflow-y: auto; padding: 24px 16px; box-sizing: border-box; }
+.modal { direction: rtl; background: var(--panel); width: min(620px, 100%); border-radius: 14px; padding: 20px; display: grid; gap: 14px; border: 1px solid var(--line); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+label.f { display: grid; gap: 4px; font-size: .8rem; color: var(--muted); min-width: 0; font-weight: 500; }
+label.f.wide { grid-column: 1 / -1; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--fg); font-size: .85rem; }
+.checks label { display: inline-flex; gap: 4px; align-items: center; }
+.dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: .88rem; margin: 0; }
+.dl dt { color: var(--muted); } .dl dd { margin: 0; min-width: 0; }
+
+/* quarter roadmap */
+.road-track { position: relative; height: 6px; border-radius: 3px; background: var(--line); }
+.road-track i { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; border-radius: 3px; background: var(--accent); }
+.road-track b { position: absolute; top: -4px; width: 2px; height: 14px; background: var(--muted); opacity: .4; }
+.road-track .now { position: absolute; top: -6px; width: 4px; height: 18px; border-radius: 2px; background: var(--coral); }
+.road { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.rq { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0 0 12px; display: grid; gap: 10px; align-content: start; min-width: 0; overflow: hidden; }
+.rq > * { margin-inline: 14px; }
+.rq .rh { margin: 0; padding: 10px 14px; background: var(--soft); border-bottom: 1px solid var(--line); display: grid; gap: 0; }
+.rq:nth-child(1) .rh { border-top: 4px solid var(--sun); } .rq:nth-child(2) .rh { border-top: 4px solid var(--sky); } .rq:nth-child(3) .rh { border-top: 4px solid var(--coral); } .rq:nth-child(4) .rh { border-top: 4px solid #2F6AA2; }
+.rq.cur { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rq.past { opacity: .7; }
+.rq .rr { font-size: .76rem; color: var(--muted); }
+.rq .focus { font-weight: 600; font-size: .92rem; line-height: 1.55; font-family: var(--f-display); }
+.rq .focus.unset { color: var(--muted); font-weight: 400; font-family: var(--f-body); }
+.rq h4 { font-size: .72rem; color: var(--muted); font-weight: 600; letter-spacing: .03em; }
+.rq ul { margin-block: 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: .85rem; }
+.rq .plist { display: grid; gap: 4px; }
+.rq .pi { font: inherit; text-align: start; background: var(--soft); border: 1px solid var(--line); border-inline-start: 3px solid var(--sc); border-radius: 6px; padding: 5px 9px; cursor: pointer; color: var(--fg); display: grid; }
+.rq .pi:hover { border-color: var(--sc); }
+.rq .pi span { font-size: .84rem; font-weight: 500; } .rq .pi small { font-size: .73rem; color: var(--muted); }
+.rq .kd { display: grid; gap: 2px; font-size: .8rem; }
+.rq .kd div { display: flex; justify-content: space-between; gap: 8px; } .rq .kd em { font-style: normal; color: var(--muted); white-space: nowrap; }
+.rq .rf { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; font-size: .78rem; color: var(--muted); }
+
+/* responsive */
+@media (max-width: 1100px) { .road { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: sticky; top: 0; height: auto; z-index: 15; padding: 0 max(12px, env(safe-area-inset-right, 0px)) 10px max(12px, env(safe-area-inset-left, 0px)); gap: 10px; overflow: visible; }
+  .brand-rule { margin: 0 calc(-1 * max(12px, env(safe-area-inset-right, 0px))); }
+  .brand-blk { padding-top: calc(4px + env(safe-area-inset-top, 0px)); } .mark { width: 34px; height: 34px; border-radius: 8px; } .brand-tx h1 { font-size: 1rem; }
+  .tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 4px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { width: auto; flex: none; padding: 7px 12px; font-size: .84rem; gap: 6px; }
+  .tabs button svg { width: 16px; height: 16px; }
+  .side-links, .side-lab { display: none; }
+  .side-sec { padding: 0; }
+  .app { padding: 18px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); gap: 16px; }
+  .pagehead h2 { font-size: 1.35rem; }
+  .hero { padding: 18px; } .hero .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .secs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) { .hide-n { display: none; } .hbars .row { grid-template-columns: 1fr; gap: 2px; } .road { grid-template-columns: 1fr; } }
+/* print sheet: always light, built from data for PDF, image and paper */
+[hidden] { display: none !important; }
+#print-root { position: fixed; top: 0; left: -30000px; width: 1400px; pointer-events: none; }
+.ps { --bg: #FFFFFF; --panel: #FFFFFF; --soft: #F7F9FB; --fg: #172433; --muted: #5E6B7A; --line: #E2E7EE; --hover: #F1F4F8; --accent: #2F6AA2; --accent-soft: #E6F0FA; --sky: #9ACCED; --sun: #FBB24C; --coral: #F27362;
+  --good: #2F7D4A; --warn: #A86512; --warn-soft: #F7EBD9; --bad: #B23A3A; --bad-soft: #F7E3E1;
+  --s-internal: #2F6AA2; --s-nfhm: #E2604D; --s-eid: #D98E1F; --s-kiswa: #3E9A9D; --s-taib: #4F8F5C; --s-extra: #7D8590;
+  color-scheme: light; direction: rtl; background: #FFFFFF; color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.55; padding: 26px 30px; display: grid; gap: 14px; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.ps-block { display: grid; gap: 10px; background: #FFFFFF; }
+.ps-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+.ps-head h1 { font-size: 1.5rem; } .ps-head p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+.ps-head .org { text-align: left; color: var(--accent); font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; }
+.ps .tl { min-width: 0 !important; }
+.ps .bar { cursor: default; color: var(--fg); height: 42px; white-space: normal; text-overflow: clip; line-height: 1.25; font-size: .72rem; padding-inline: 5px; display: flex; align-items: center; }
+.ps .today { display: none; }
+.ps table { font-size: .82rem; } .ps th { position: static; background: #F3F6F5; color: var(--muted); } .ps td { padding: 5px 10px; }
+.ps .quarters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ps .quarter { background: #F7F9F8; } .ps .pcard { cursor: default; }
+.ps .foot { color: var(--muted); font-size: .76rem; display: flex; justify-content: space-between; }
+.ps .legend { font-size: .78rem; }
+.ps .conf { background: var(--warn-soft); }
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  html, body { background: #FFFFFF !important; }
+  body.printing > *:not(#print-root) { display: none !important; }
+  body.printing #print-root { position: static; left: auto; width: auto; }
+  body.printing .ps { padding: 0; font-size: 11px; }
+  .ps-block { break-inside: avoid; }
+  .ps .tl { font-size: .72rem; }
+  .ps .bar { font-size: .6rem; line-height: 1.15; padding-inline: 3px; }
+  .ps .tl .lab { padding: 6px; font-size: .7rem; }
+}
+</style>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand-rule" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="brand-blk">
+      <img class="mark" src="data:image/png;base64,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" alt="شعار احتواء">
+      <div class="brand-tx"><h1 id="h-title">احتواء</h1><p>نظام الإدارة · خطة 2027</p></div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="الأقسام">
+        <button role="tab" id="t-home" data-v="home" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg><span class="lbl">الرئيسية</span></button>
+        <button role="tab" id="t-annual" data-v="annual" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 14h3M13.5 14h3M7.5 17.5h3"/></svg><span class="lbl">الخطة السنوية</span></button>
+        <button role="tab" id="t-ops" data-v="ops" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5L7.5 17"/></svg><span class="lbl">الخطة التشغيلية</span></button>
+        <button role="tab" id="t-projects" data-v="projects" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2.5h6.5A2.5 2.5 0 0 1 21 10v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18z"/></svg><span class="lbl">المشاريع</span></button>
+        <button role="tab" id="t-vol" data-v="vol" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2A5.2 5.2 0 0 1 21.5 19"/></svg><span class="lbl">المتطوعون</span></button>
+        <button role="tab" id="t-com" data-v="com" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2.5" width="6" height="5" rx="1.2"/><rect x="2.5" y="16.5" width="6" height="5" rx="1.2"/><rect x="15.5" y="16.5" width="6" height="5" rx="1.2"/><path d="M12 7.5v4.5M5.5 16.5V12h13v4.5"/></svg><span class="lbl">اللجان</span></button>
+    </nav>
+    <div class="side-sec">
+      <span class="side-lab">التقويم</span>
+      <div class="calseg" role="group" aria-label="التقويم" id="calseg">
+        <button type="button" id="cal-both" data-c="both" aria-pressed="true">الاثنان</button>
+        <button type="button" id="cal-h" data-c="h" aria-pressed="false">هجري</button>
+        <button type="button" id="cal-g" data-c="g" aria-pressed="false">ميلادي</button>
+      </div>
+    </div>
+    <div class="side-sec side-links">
+      <span class="side-lab">صفحات مرتبطة</span>
+      <a href="https://claude.ai/artifact/QQBaG3zYYFyuoke8JbKDsg" target="_blank" rel="noopener">موازنة 2027 <span aria-hidden="true">↗</span></a>
+      <a href="https://claude.ai/artifact/JnNtAAvHkG8Kpmhnv5wdDK" target="_blank" rel="noopener">هيكل اللجان <span aria-hidden="true">↗</span></a>
+      <a href="https://claude.ai/artifact/R1P6RJPxdNRNgQerKbC1t7" target="_blank" rel="noopener">نظام التسجيل <span aria-hidden="true">↗</span></a>
+    </div>
+  </aside>
+<main class="app" id="app">
+  <header class="pagehead">
+    <div class="ph-tx"><p class="eyebrow">مؤسسة احتواء · خطة 2027</p><h2 id="page-title">الرئيسية</h2><p id="sub">الخطة السنوية والتشغيلية والمشاريع والمتطوعين واللجان في مكان واحد</p></div>
+    <div class="today-chip" id="today-chip"></div>
+  </header>
+  <div id="msg" class="status" hidden></div>
+
+  <!-- HOME -->
+  <section class="view" id="v-home">
+    <div style="display:grid;gap:16px">
+      <div class="hero">
+        <div><p class="eyebrow" id="hero-eye">خطة 2027</p><h3 id="hero-title">نظرة عامة</h3><p id="hero-sub"></p></div>
+        <div class="kpis" id="home-kpis"></div>
+      </div>
+      <div class="secs" id="home-secs"></div>
+      <div class="card">
+        <div class="head"><h2>خريطة السنة: وش المفروض في كل ربع</h2><span class="note" id="road-note"></span></div>
+        <div class="road-track" id="road-track" aria-hidden="true"></div>
+        <div class="road" id="road"></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>تقويم السنة بالأرباع</h2><button class="btn sm" type="button" data-export="year">طباعة أو تحميل</button></div>
+        <div class="head" style="margin-top:-6px"><span class="note" id="tl-note">كل شريط مشروع؛ اضغط عليه لفتح التفاصيل. الإطار المتقطع: بانتظار الاتفاق. الخط المنقّط: يوم العيد. رمضان وذو الحجة مظللان في صف الهجري.</span></div>
+        <div class="tl-box"><div class="tl" id="home-tl"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="head"><h2>مهام الأسابيع الستة القادمة</h2><button class="btn sm" type="button" data-go="ops">كل المهام</button></div>
+          <div class="tbox" style="max-height:380px"><table><thead><tr><th>المهمة</th><th>المشروع</th><th class="hide-n">اللجنة</th><th>الاستحقاق</th></tr></thead><tbody id="home-up"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="head"><h2>تحتاج انتباه</h2></div>
+          <div id="home-alerts" style="display:grid;gap:8px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANNUAL -->
+  <section class="view" id="v-annual" hidden>
+    <div style="display:grid;gap:16px">
+      <div class="card">
+        <div class="head"><h2>أهداف السنة</h2><button class="btn sm edit-only" type="button" id="add-goal">+ هدف</button></div>
+        <p class="note">لكل هدف خط أساس من بيانات 2026، والمستهدف لنهاية السنة. الشريط الرمادي خط الأساس، والعلامة السوداء المستهدف، والخضراء المتحقق متى أُدخل.</p>
+        <div class="goals" id="goals"></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2>التقويم المبدئي بالأرباع</h2><div class="controls"><div class="chips" id="annual-chips"></div><button class="btn sm" type="button" data-export="quarters">طباعة أو تحميل</button><button class="btn sm primary edit-only" type="button" data-add="project">+ مشروع</button></div></div>
+        <div class="quarters" id="quarters"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OPS -->
+  <section class="view" id="v-ops" hidden>
+    <div class="card">
+      <div class="head"><h2>الخطة التشغيلية</h2><button class="btn sm primary edit-only" type="button" data-add="task">+ مهمة</button></div>
+      <div class="controls">
+        <select id="o-q" aria-label="الربع"><option value="">كل الأرباع</option><option value="1">الربع الأول</option><option value="2">الربع الثاني</option><option value="3">الربع الثالث</option><option value="4">الربع الرابع</option></select>
+        <select id="o-sec" aria-label="القسم"></select>
+        <select id="o-proj" aria-label="المشروع"></select>
+        <select id="o-com" aria-label="اللجنة"></select>
+        <select id="o-st" aria-label="الحالة"><option value="">كل الحالات</option><option value="open">غير منجزة</option><option value="late">متأخرة</option><option>لم تبدأ</option><option>جارية</option><option>منجزة</option><option>معلقة</option></select>
+        <input type="search" id="o-q2" placeholder="ابحث في المهام" aria-label="بحث">
+      </div>
+      <p class="note" id="ops-line"></p>
+      <div class="tbox"><table><thead><tr><th>المهمة</th><th>المشروع</th><th>اللجنة</th><th class="hide-n">المسؤول</th><th>من</th><th>إلى</th><th>الحالة</th><th class="edit-only"></th></tr></thead><tbody id="ops-rows"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="view" id="v-projects" hidden>
+    <div class="card">
+      <div class="head"><h2 id="proj-h">كل المشاريع</h2><button class="btn sm primary edit-only" type="button" data-add="project">+ مشروع</button></div>
+      <div class="chips" id="proj-chips"></div>
+      <p class="note" id="proj-note"></p>
+      <div id="school" class="school" hidden>
+        <div class="head"><div><h2 id="sch-title">التقويم الدراسي</h2><p class="note" id="sch-sub"></p></div><div class="controls"><button class="btn sm" type="button" data-export="school">طباعة أو تحميل</button><button class="btn sm primary edit-only" type="button" data-add="school">+ فترة أو إجازة</button></div></div>
+        <div class="kpis" id="sch-kpis"></div>
+        <div class="legend" id="sch-legend"><span style="--sw: var(--accent)">فصل دراسي</span><span style="--sw: var(--warn)">إجازة</span><span style="--sw: var(--bad)">اختبارات</span><span style="--sw: var(--s-nfhm)">مشاريع نفهمه صح</span><span style="--sw: transparent; outline: 1px dashed var(--muted)">إطار متقطع: تقديري</span></div>
+        <div class="tl-box"><div class="tl" id="sch-tl"></div></div>
+        <div id="sch-conf" style="display:grid;gap:8px"></div>
+        <div class="tbox" style="max-height:420px"><table><thead><tr><th>الفترة</th><th>النوع</th><th>من</th><th>إلى</th><th class="hide-n">المدة</th><th class="hide-n">ملاحظات</th><th class="edit-only"></th></tr></thead><tbody id="sch-rows"></tbody></table></div>
+        <p class="note" id="sch-src"></p>
+      </div>
+      <div class="pgrid" id="proj-grid"></div>
+    </div>
+  </section>
+
+  <!-- VOLUNTEERS -->
+  <section class="view" id="v-vol" hidden>
+    <div style="display:grid;gap:16px">
+      <div class="status" id="vol-src"></div>
+      <div class="kpis" id="vol-kpis"></div>
+      <div class="grid2">
+        <div class="card">
+          <h2>المتطوعون في المشاريع كل سنة</h2>
+          <div class="legend"><span style="--sw: var(--accent)">عائدون</span><span style="--sw: var(--warn)">جدد</span></div>
+          <div class="cols-wrap"><div class="cols" id="vol-years"></div></div>
+          <p class="note" id="vol-ret"></p>
+        </div>
+        <div class="card">
+          <h2>المتطوعون في كل قسم</h2>
+          <div class="controls"><div class="chips" id="vol-ychips"></div></div>
+          <div class="hbars" id="vol-secs"></div>
+          <h3 style="margin-top:6px">كم مشروعاً شارك فيه كل عضو</h3>
+          <div class="hbars" id="vol-dist"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>متطوعو 2026 حسب العمر</h2>
+          <div class="hbars" id="vol-age"></div>
+          <p class="note" id="vol-g"></p>
+        </div>
+        <div class="card">
+          <h2>مستهدف 2027 مقابل المتحقق</h2>
+          <p class="note">المستهدف من خطة كل مشروع، والمتحقق يُدخل بعد انتهائه.</p>
+          <div class="tbox" style="max-height:360px"><table><thead><tr><th>المشروع</th><th>الربع</th><th>المستهدف</th><th>المتحقق</th><th class="hide-n">آخر نسخة</th></tr></thead><tbody id="vol-plan"></tbody></table></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>المسجلون في مشاريع 2024–2026</h2>
+        <div class="tbox" style="max-height:420px"><table><thead><tr><th>المشروع</th><th>القسم</th><th>السنة</th><th>المسجلون</th><th>منهم جدد</th></tr></thead><tbody id="vol-proj"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMITTEES -->
+  <section class="view" id="v-com" hidden>
+    <div class="card">
+      <div class="head"><h2>اللجان</h2><div class="controls"><a class="btn sm" href="https://claude.ai/artifact/JnNtAAvHkG8Kpmhnv5wdDK" target="_blank" rel="noopener">الهيكل والقادة وقوائم الأعضاء ↗</a><button class="btn sm primary edit-only" type="button" data-add="committee">+ لجنة</button></div></div>
+      <p class="note" id="com-note"></p>
+      <div class="cgrid" id="com-grid"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div id="print-root" aria-hidden="true"></div>
+<div class="overlay" id="drawer-ov" hidden><aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title"></aside></div>
+<div class="overlay center" id="modal-ov" hidden><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mo-title"></div></div>
+
+<script>
+(() => {
+const $ = (id) => document.getElementById(id);
+const el = (tag, txt, cls) => { const e = document.createElement(tag); if (txt != null) e.textContent = txt; if (cls) e.className = cls; return e; };
+const fmt = (n) => n == null || n === '' ? '—' : Number(n).toLocaleString('en-US');
+
+const SECTIONS = [
+  { id: 'internal', name: 'المشاريع الداخلية', long: 'إدارة المشاريع الداخلية' },
+  { id: 'nfhm', name: 'نفهمه صح', long: 'مشروع نفهمه صح' },
+  { id: 'eid', name: 'العيديات', long: 'مشروع العيديات' },
+  { id: 'kiswa', name: 'مع كسوة فرح', long: 'مشاريع بالتعاون مع كسوة فرح' },
+  { id: 'taib', name: 'مع جمعية طيب', long: 'مشاريع بالتعاون مع جمعية طيب' },
+  { id: 'extra', name: 'مشاريع إضافية', long: 'مشاريع إضافية خلال السنة' },
+];
+const SEC = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
+const scol = (id) => `var(--s-${SEC[id] ? id : 'extra'})`;
+const P_STATUS = ['مخطط', 'بانتظار الاتفاق', 'قيد التنفيذ', 'مكتمل', 'مؤجل', 'ملغى'];
+const T_STATUS = ['لم تبدأ', 'جارية', 'منجزة', 'معلقة'];
+const C_STATUS = ['نشطة', 'تحتاج دعم', 'بلا قائد', 'متوقفة'];
+const MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const pTone = (s) => ({ 'مكتمل': 'good', 'قيد التنفيذ': 'acc', 'بانتظار الاتفاق': 'warn', 'مؤجل': 'warn', 'ملغى': 'bad' }[s] || '');
+const tTone = (s) => ({ 'منجزة': 'good', 'جارية': 'acc', 'معلقة': 'warn' }[s] || '');
+const cTone = (s) => ({ 'نشطة': 'good', 'تحتاج دعم': 'warn', 'بلا قائد': 'bad', 'متوقفة': 'bad' }[s] || '');
+
+const todayISO = (() => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); })();
+const S = { db: null, dl: null, canEdit: false, year: 2027, regUrl: '', projects: [], tasks: [], committees: [], goals: [], school: [], quarters: [], schoolMeta: null, snap: null, loaded: {},
+  tab: 'home', annualSec: '', projSec: '', volYear: '2026', openProject: null, cal: 'both' };
+try { const c = localStorage.getItem('ihtiwa-cal'); if (['both', 'h', 'g'].includes(c)) S.cal = c; } catch (e) {}
+
+function say(t, err) { const m = $('msg'); m.hidden = !t; m.textContent = t || ''; m.className = 'status' + (err ? ' err' : ''); if (t && !err) setTimeout(() => { if (m.textContent === t) m.hidden = true; }, 3500); }
+
+// ---------- helpers
+const qOf = (iso) => { if (!iso) return null; const y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7)); if (y < S.year) return 0; if (y > S.year) return 5; return Math.ceil(m / 3); };
+// ---------- calendars (Umm al-Qura for Hijri)
+let HF = null, HN = null;
+try { HF = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); HN = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'numeric', year: 'numeric' }); } catch (e) {}
+const hCache = new Map();
+function hParts(iso) {
+  if (!iso || !HF) return null; if (hCache.has(iso)) return hCache.get(iso);
+  const d = new Date(iso + 'T12:00:00'); let out = null;
+  try { const a = HF.formatToParts(d), b = HN.formatToParts(d); const g = (ps, t) => (ps.find((p) => p.type === t) || {}).value || '';
+    out = { d: Number(g(b, 'day')), mn: Number(g(b, 'month')), y: Number(String(g(b, 'year')).replace(/\D/g, '')), m: g(a, 'month') }; } catch (e) {}
+  hCache.set(iso, out); return out;
+}
+const gShort = (iso) => { const m = Number(iso.slice(5, 7)); return `${Number(iso.slice(8, 10))} ${MONTHS[m - 1]}${iso.slice(0, 4) !== String(S.year) ? ' ' + iso.slice(0, 4) : ''}`; };
+const hShort = (iso, withYear) => { const p = hParts(iso); return p ? `${p.d} ${p.m}${withYear ? ' ' + p.y : ''}` : ''; };
+const dShort = (iso) => { if (!iso) return '—'; if (S.cal === 'g' || !HF) return gShort(iso); if (S.cal === 'h') return hShort(iso, true) + 'هـ'; return `${gShort(iso)} · ${hShort(iso)}`; };
+const hijri = (iso) => { const p = hParts(iso); return p ? `${p.d} ${p.m} ${p.y}هـ` : ''; };
+const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+// Hijri month runs inside one Gregorian year
+function hMonths(year) {
+  const out = []; let iso = `${year}-01-01`;
+  while (iso.slice(0, 4) === String(year)) { const p = hParts(iso); if (!p) break; const k = p.y + '-' + p.mn; const last = out[out.length - 1]; if (!last || last.k !== k) out.push({ k, from: iso, to: iso, ...p }); else last.to = iso; iso = isoAdd(iso, 1); }
+  return out;
+}
+function eidDays(year) { return hMonths(year).flatMap((m) => { if (m.mn === 10) return [{ iso: m.from, name: 'عيد الفطر' }]; if (m.mn === 12) { const d = isoAdd(m.from, 10 - m.d); return d.slice(0, 4) === String(year) ? [{ iso: d, name: 'عيد الأضحى' }] : []; } return []; }); }
+function hRange(fromIso, toIso) { const a = hParts(fromIso), b = hParts(toIso); if (!a || !b) return ''; return a.y === b.y ? `${a.m} – ${b.m} ${b.y}هـ` : `${a.m} ${a.y} – ${b.m} ${b.y}هـ`; }
+const isLate = (t) => t.status !== 'منجزة' && t.due && t.due < todayISO;
+const projById = (id) => S.projects.find((p) => p.id === id);
+const byStart = (a, b) => String(a.start || '').localeCompare(String(b.start || '')) || String(a.name).localeCompare(String(b.name), 'ar');
+const tasksOf = (pid) => S.tasks.filter((t) => t.projectId === pid);
+const doneShare = (pid) => { const ts = tasksOf(pid); return ts.length ? ts.filter((t) => t.status === 'منجزة').length / ts.length : 0; };
+const committeeNames = () => [...new Set(['الإدارة', ...S.committees.map((c) => c.name)])];
+function secTag(id) { const s = el('span', null, 'sec-tag'); const d = el('span', null, 'dot'); d.style.setProperty('--sc', scol(id)); s.append(d, (SEC[id] || SEC.extra).name); return s; }
+function pill(text, tone) { return el('span', text, 'pill' + (tone ? ' ' + tone : '')); }
+
+// ---------- tabs
+function setTab(v) {
+  S.tab = v;
+  document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.v === v)));
+  ['home', 'annual', 'ops', 'projects', 'vol', 'com'].forEach((x) => { $('v-' + x).hidden = x !== v; });
+  const tl = document.querySelector('.tabs button[data-v="' + v + '"] .lbl'); if (tl && $('page-title')) $('page-title').textContent = tl.textContent;
+  try { history.replaceState(null, '', '#' + v); } catch (e) {}
+}
+document.querySelector('.tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setTab(b.dataset.v); });
+document.addEventListener('click', (e) => {
+  const g = e.target.closest('[data-go]'); if (g) setTab(g.dataset.go);
+  const a = e.target.closest('[data-add]'); if (a) openForm(a.dataset.add, null, a.dataset.preset ? JSON.parse(a.dataset.preset) : null);
+});
+
+// ---------- HOME
+function renderHero() {
+  const y0 = `${S.year}-01-01`, y1 = `${S.year}-12-31`;
+  const live = S.projects.filter((p) => p.start && p.start <= todayISO && (p.end || p.start) >= todayISO && p.status !== 'ملغى').sort(byStart);
+  const next = S.projects.filter((p) => p.start && p.start > todayISO && !['ملغى', 'مكتمل'].includes(p.status)).sort(byStart)[0];
+  const days = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
+  if (todayISO < y0) { $('hero-eye').textContent = 'العد التنازلي'; $('hero-title').textContent = `تبدأ سنة ${S.year} بعد ${fmt(days(todayISO, y0))} يوماً`; }
+  else if (todayISO > y1) { $('hero-eye').textContent = 'الختام'; $('hero-title').textContent = `انتهت سنة ${S.year}`; }
+  else { $('hero-eye').textContent = `الربع ${['الأول', 'الثاني', 'الثالث', 'الرابع'][qOf(todayISO) - 1]}`; $('hero-title').textContent = live.length ? `${fmt(live.length)} ${live.length === 1 ? 'مشروع جارٍ' : 'مشاريع جارية'} الآن` : 'لا مشروع جارٍ اليوم'; }
+  $('hero-sub').textContent = next ? `التالي: ${next.name} · ${dShort(next.start)} (بعد ${fmt(days(todayISO, next.start))} يوماً)` : 'لا مشاريع قادمة في الخطة.';
+}
+function renderHome() {
+  renderHero();
+  const ps = S.projects, ts = S.tasks;
+  const k = $('home-kpis'); k.replaceChildren();
+  const add = (v, l, cls) => { const d = el('div', null, 'kpi' + (cls ? ' ' + cls : '')); d.append(el('div', v, 'v'), el('div', l, 'l')); k.append(d); };
+  const curQ = qOf(todayISO) >= 1 && qOf(todayISO) <= 4 ? qOf(todayISO) : 1;
+  add(fmt(ps.length), `مشروعاً في خطة ${S.year}`);
+  add(fmt(ps.filter((p) => p.status === 'قيد التنفيذ').length), 'قيد التنفيذ الآن');
+  const qT = ts.filter((t) => qOf(t.due) === curQ);
+  add(`${fmt(qT.filter((t) => t.status === 'منجزة').length)} / ${fmt(qT.length)}`, `مهام الربع ${['', 'الأول', 'الثاني', 'الثالث', 'الرابع'][curQ]} المنجزة`);
+  const late = ts.filter(isLate).length; add(fmt(late), 'مهمة متأخرة', late ? 'bad' : 'good');
+  if (S.snap) { const y = S.snap.byYear[S.snap.byYear.length - 1]; add(fmt(y.total), `متطوعاً في مشاريع ${y.y}`); }
+  const weak = S.committees.filter((c) => c.status && c.status !== 'نشطة').length; add(fmt(weak), 'لجنة تحتاج دعماً أو قائداً', weak ? 'warn' : 'good');
+
+  const sc = $('home-secs'); sc.replaceChildren(...SECTIONS.map((s) => {
+    const list = ps.filter((p) => p.section === s.id).sort(byStart);
+    const b = el('button', null, 'sec'); b.type = 'button'; b.style.setProperty('--sc', scol(s.id));
+    const next = list.find((p) => (p.end || '') >= todayISO && !['مكتمل', 'ملغى'].includes(p.status));
+    b.append(el('span', s.long, 'l'), el('span', fmt(list.length) + (list.length === 1 ? ' مشروع' : ' مشاريع'), 'v'), el('span', next ? 'التالي: ' + next.name : (list.length ? 'لا مشاريع قادمة' : 'لم يُضف مشروع بعد'), 'l'));
+    b.addEventListener('click', () => { S.projSec = s.id; renderProjects(); setTab('projects'); });
+    return b;
+  }));
+  renderRoad();
+  renderTimeline($('home-tl'));
+
+  const horizon = new Date(Date.now() + 42 * 864e5).toISOString().slice(0, 10);
+  const up = ts.filter((t) => t.status !== 'منجزة' && t.due && t.due <= horizon).sort((a, b) => a.due.localeCompare(b.due)).slice(0, 40);
+  const body = $('home-up');
+  if (!up.length) { const tr = el('tr'); const td = el('td', 'لا مهام مستحقة خلال الأسابيع الستة القادمة.', 'mut'); td.colSpan = 4; tr.append(td); body.replaceChildren(tr); }
+  else body.replaceChildren(...up.map((t) => { const tr = el('tr'); if (isLate(t)) tr.className = 'late'; const p = projById(t.projectId); const nb = el('button', t.title, 'linkish'); nb.type = 'button'; nb.addEventListener('click', () => openForm('task', t)); const c1 = el('td'); c1.append(nb); tr.append(c1, el('td', p ? p.name : '—', 'mut'), el('td', t.committee || '—', 'hide-n mut'), el('td', dShort(t.due) + (isLate(t) ? ' · متأخرة' : ''), 'nw' + (isLate(t) ? '' : ' mut'))); if (isLate(t)) tr.lastChild.style.color = 'var(--bad)'; return tr; }));
+
+  const al = $('home-alerts'); al.replaceChildren();
+  const alert = (text, tone, go) => { const d = el('div'); d.style.cssText = 'display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:8px 10px;border-radius:8px;background:var(--' + (tone || 'hover') + '-soft, var(--hover))'; d.append(el('span', text)); if (go) { const b = el('button', 'عرض', 'btn sm'); b.type = 'button'; b.addEventListener('click', go); d.append(b); } al.append(d); };
+  S.committees.filter((c) => c.status === 'بلا قائد').forEach((c) => alert(`لجنة ${c.name} بلا قائد.`, 'bad', () => setTab('com')));
+  const noLead = ps.filter((p) => !p.lead && !['مكتمل', 'ملغى'].includes(p.status) && p.start && p.start <= new Date(Date.now() + 75 * 864e5).toISOString().slice(0, 10));
+  noLead.forEach((p) => alert(`«${p.name}» يبدأ ${dShort(p.start)} ولم يُعيّن قائده.`, 'warn', () => openProject(p.id)));
+  ps.filter((p) => p.status === 'بانتظار الاتفاق').forEach((p) => alert(`«${p.name}» بانتظار الاتفاق مع الشريك.`, 'warn', () => openProject(p.id)));
+  if (late) alert(`${fmt(late)} مهمة تجاوزت موعدها.`, 'bad', () => { $('o-st').value = 'late'; renderOps(); setTab('ops'); });
+  if (!al.children.length) al.append(el('p', 'لا شيء يحتاج انتباهاً الآن.', 'note'));
+}
+
+let ROWH = 28;
+function renderTimeline(host) {
+  host.replaceChildren();
+  host.append(Object.assign(el('div', null, 'corner'), { style: 'grid-column:1' }));
+  for (let q = 0; q < 4; q++) { const h = el('div', `الربع ${['الأول', 'الثاني', 'الثالث', 'الرابع'][q]}`, 'qh'); h.style.gridColumn = `${2 + q * 3} / span 3`; host.append(h); }
+  MONTHS.forEach((m, i) => { const h = el('div', m, 'mh'); h.style.gridColumn = String(2 + i); host.append(h); });
+  const y0 = new Date(`${S.year}-01-01T00:00:00`).getTime(), y1 = new Date(`${S.year + 1}-01-01T00:00:00`).getTime(), span = y1 - y0;
+  const pos = (iso) => Math.min(1, Math.max(0, (new Date(iso + 'T00:00:00').getTime() - y0) / span));
+  const eids = HF ? eidDays(S.year) : [];
+  if (S.cal !== 'g' && HF) {
+    const hm = hMonths(S.year); const ys = [...new Set(hm.map((m) => m.y))];
+    host.append(el('div', `الهجري ${ys.join(' / ')}`, 'hlab'));
+    const row = el('div', null, 'hrow');
+    hm.forEach((m) => { const a = pos(m.from), b = pos(isoAdd(m.to, 1)); const s = el('div', m.m + (m.mn === 1 ? ' ' + m.y : ''), 'hm' + ([9, 12].includes(m.mn) ? ' hot' : '')); s.style.insetInlineStart = (a * 100) + '%'; s.style.width = ((b - a) * 100) + '%'; s.title = `${m.m} ${m.y}هـ: ${gShort(m.from)} – ${gShort(m.to)}`; row.append(s); });
+    eids.forEach((e) => { const l = el('div', null, 'eidline'); l.style.insetInlineStart = (pos(e.iso) * 100) + '%'; l.title = `${e.name} ${gShort(e.iso)}`; row.append(l); });
+    host.append(row);
+  }
+  SECTIONS.forEach((s) => {
+    const list = S.projects.filter((p) => p.section === s.id && p.start).sort(byStart);
+    const lab = el('div', null, 'lab'); const d = el('span', null, 'dot'); d.style.setProperty('--sc', scol(s.id)); lab.append(d, s.name); host.append(lab);
+    const lane = el('div', null, 'lane qline');
+    // pack bars into rows
+    const rows = [];
+    const MINF = ROWH > 28 ? 0.08 : 0;
+    list.forEach((p) => { let a = pos(p.start), b = pos(p.end || p.start); if (b <= 0 && a <= 0 || a >= 1) return; if (MINF) { a = Math.min(a, 1 - MINF); b = Math.max(b, a + MINF); } let r = rows.findIndex((end) => end <= a); if (r < 0) { rows.push(0); r = rows.length - 1; } rows[r] = b + 0.005; p._row = r; p._a = a; p._b = b; });
+    lane.style.minHeight = Math.max(40, rows.length * ROWH + 12) + 'px';
+    list.forEach((p) => {
+      if (p._row == null) return;
+      const bar = el('button', p.name, 'bar' + (p.status === 'بانتظار الاتفاق' ? ' pending' : '')); bar.type = 'button';
+      bar.style.setProperty('--sc', scol(s.id)); bar.style.insetInlineStart = (p._a * 100) + '%'; bar.style.width = `max(${Math.max(0.6, (p._b - p._a) * 100)}%, 8px)`; bar.style.top = (6 + p._row * ROWH) + 'px';
+      bar.title = `${p.name} · ${dShort(p.start)} – ${dShort(p.end)}`;
+      bar.addEventListener('click', () => openProject(p.id)); lane.append(bar);
+      delete p._row; delete p._a; delete p._b;
+    });
+    eids.forEach((e) => { const l = el('div', null, 'eidline'); l.style.insetInlineStart = (pos(e.iso) * 100) + '%'; lane.append(l); });
+    if (todayISO.slice(0, 4) === String(S.year)) { const t = el('div', null, 'today'); t.style.insetInlineStart = (pos(todayISO) * 100) + '%'; lane.append(t); }
+    if (!list.length) { const e = el('span', 'لا مشاريع بعد', 'mut'); e.style.cssText = 'position:absolute;top:10px;inset-inline-start:10px;font-size:.78rem'; lane.append(e); }
+    host.append(lane);
+  });
+}
+
+
+// ---------- quarter roadmap
+const QN4 = ['الأول', 'الثاني', 'الثالث', 'الرابع'];
+const qBounds = (q) => { const m = (q - 1) * 3 + 1; const from = `${S.year}-${String(m).padStart(2, '0')}-01`; const to = isoAdd(`${S.year + (q === 4 ? 1 : 0)}-${String(q === 4 ? 1 : m + 3).padStart(2, '0')}-01`, -1); return { from, to }; };
+function keyDates(from, to) {
+  const out = [];
+  if (HF) {
+    const ram = hMonths(S.year).find((m) => m.mn === 9); if (ram && ram.from >= from && ram.from <= to) out.push([ram.from, 'بداية رمضان']);
+    eidDays(S.year).forEach((e) => { if (e.iso >= from && e.iso <= to) out.push([e.iso, e.name]); });
+  }
+  S.school.filter((x) => x.kind === 'term' && x.start >= from && x.start <= to).forEach((x) => out.push([x.start, 'بداية ' + x.name + (x.est ? ' (تقديري)' : '')]));
+  S.school.filter((x) => x.kind === 'break' && /الصيف|نهاية العام/.test(x.name || '') && x.start >= from && x.start <= to).forEach((x) => out.push([x.start, x.name]));
+  return out.sort((a, b) => a[0].localeCompare(b[0]));
+}
+function renderRoad() {
+  const host = $('road'); if (!host) return;
+  const curQ = todayISO.slice(0, 4) === String(S.year) ? qOf(todayISO) : 0;
+  const y0 = `${S.year}-01-01`, y1 = `${S.year}-12-31`;
+  const tr = $('road-track'); tr.replaceChildren();
+  const frac = todayISO < y0 ? 0 : todayISO > y1 ? 1 : (new Date(todayISO) - new Date(y0)) / (new Date(y1) - new Date(y0));
+  const fill = el('i'); fill.style.width = (frac * 100) + '%'; tr.append(fill);
+  [1, 2, 3].forEach((k) => { const b = el('b'); b.style.insetInlineStart = (k * 25) + '%'; tr.append(b); });
+  if (frac > 0 && frac < 1) { const n = el('span', null, 'now'); n.style.insetInlineStart = `calc(${frac * 100}% - 2px)`; n.title = 'اليوم'; tr.append(n); }
+  const days = Math.round((new Date(y0) - new Date(todayISO)) / 864e5);
+  $('road-note').textContent = todayISO < y0 ? `تبدأ السنة بعد ${fmt(days)} يوماً` : todayISO > y1 ? `انتهت سنة ${S.year}` : `نحن في الربع ${QN4[curQ - 1]}`;
+  const qdoc = (q) => S.quarters.find((d) => d.id === 'q' + q) || {};
+  host.replaceChildren(...[1, 2, 3, 4].map((q) => {
+    const { from, to } = qBounds(q); const d = qdoc(q);
+    const box = el('div', null, 'rq' + (q === curQ ? ' cur' : '') + (curQ && q < curQ ? ' past' : ''));
+    const rh = el('div', null, 'rh'); const hr = S.cal !== 'g' ? hRange(from, to) : '';
+    const gr = `${MONTHS[(q - 1) * 3]} – ${MONTHS[(q - 1) * 3 + 2]}`;
+    rh.append(el('h3', 'الربع ' + QN4[q - 1]), el('span', S.cal === 'h' && hr ? hr : (hr ? `${gr} · ${hr}` : gr), 'rr')); box.append(rh);
+    box.append(el('div', d.focus || (S.canEdit ? 'لم يُحدد تركيز هذا الربع بعد.' : 'تركيز الربع يُحدد لاحقاً.'), 'focus' + (d.focus ? '' : ' unset')));
+    const outs = (d.outputs || []).filter(Boolean);
+    if (outs.length) { box.append(el('h4', 'المخرجات المتوقعة')); const ul = el('ul'); outs.forEach((o) => ul.append(el('li', o))); box.append(ul); }
+    const ps = S.projects.filter((p) => p.start && (qOf(p.start) === q || (q === 1 && qOf(p.start) === 0))).sort(byStart);
+    box.append(el('h4', `المشاريع (${ps.length})`));
+    const pl = el('div', null, 'plist');
+    if (!ps.length) pl.append(el('span', 'لا مشاريع تبدأ في هذا الربع.', 'note'));
+    ps.forEach((p) => { const b = el('button', null, 'pi'); b.type = 'button'; b.style.setProperty('--sc', scol(p.section)); b.append(el('span', p.name), el('small', `${dShort(p.start)} – ${dShort(p.end)}${p.status && p.status !== 'مخطط' ? ' · ' + p.status : ''}`)); b.addEventListener('click', () => openProject(p.id)); pl.append(b); });
+    box.append(pl);
+    const kd = keyDates(from, to);
+    if (kd.length) { box.append(el('h4', 'مواعيد مهمة')); const k = el('div', null, 'kd'); kd.forEach(([iso, name]) => { const r = el('div'); r.append(el('span', name), el('em', dShort(iso))); k.append(r); }); box.append(k); }
+    const ts = S.tasks.filter((t) => qOf(t.due) === q); const dn = ts.filter((t) => t.status === 'منجزة').length; const lt = ts.filter(isLate).length;
+    const rf = el('div', null, 'rf'); rf.append(el('span', `${fmt(ts.length)} مهمة · ${fmt(dn)} منجزة${lt ? ' · ' + fmt(lt) + ' متأخرة' : ''}`));
+    const m = el('div', null, 'meter'); const i = el('i'); i.style.width = (ts.length ? dn / ts.length * 100 : 0) + '%'; m.append(i); rf.append(m);
+    if (S.canEdit) { const eb = el('button', 'تعديل التركيز والمخرجات', 'btn sm'); eb.type = 'button'; eb.style.justifySelf = 'start'; eb.addEventListener('click', () => openQuarterForm(q)); rf.append(eb); }
+    box.append(rf); return box;
+  }));
+}
+function openQuarterForm(q) {
+  const d = S.quarters.find((x) => x.id === 'q' + q) || {}; const m = $('modal'); m.replaceChildren();
+  const h = el('h2', 'الربع ' + QN4[q - 1] + ': التركيز والمخرجات'); h.id = 'mo-title'; m.append(h);
+  const f = el('form'); f.noValidate = true; const fs = el('div', null, 'fields');
+  const l1 = el('label', 'تركيز الربع (جملة واحدة)', 'f wide'); const t1 = el('textarea'); t1.id = 'rq-focus'; t1.value = d.focus || ''; t1.style.minHeight = '60px'; l1.append(t1);
+  const l2 = el('label', 'المخرجات المتوقعة (مخرج في كل سطر)', 'f wide'); const t2 = el('textarea'); t2.id = 'rq-outs'; t2.value = (d.outputs || []).join('\n'); t2.style.minHeight = '140px'; l2.append(t2);
+  fs.append(l1, l2); f.append(fs);
+  const row = el('div', null, 'controls'); const sv = el('button', 'حفظ', 'btn primary'); sv.type = 'submit'; const cn = el('button', 'إلغاء', 'btn'); cn.type = 'button'; cn.addEventListener('click', closeModal); row.append(sv, cn); f.append(row);
+  f.addEventListener('submit', async (e) => { e.preventDefault(); sv.disabled = true; const ok = await save('quarters', 'q' + q, { q, focus: t1.value.trim(), outputs: t2.value.split('\n').map((x) => x.trim()).filter(Boolean), updated: todayISO }, 'حُفظ الربع.'); sv.disabled = false; if (ok) closeModal(); });
+  m.append(f); $('modal-ov').hidden = false; document.body.style.overflow = 'hidden'; setTimeout(() => t1.focus(), 0);
+}
+
+// ---------- ANNUAL
+function renderGoals() {
+  const host = $('goals');
+  if (!S.goals.length) { host.replaceChildren(el('div', 'لم تُضف أهداف بعد.', 'empty')); return; }
+  host.replaceChildren(...S.goals.slice().sort((a, b) => String(a.id).localeCompare(String(b.id))).map((g) => {
+    const d = el('div', null, 'goal');
+    const left = el('div'); const t = el('div', null, 't'); t.textContent = g.title; left.append(t, el('div', g.metric || '', 'm'));
+    const linked = S.projects.filter((p) => p.goal === g.id).length; if (linked) left.append(el('div', `${linked} مشروعاً مرتبطاً بهذا الهدف`, 'm'));
+    if (g.notes) left.append(el('div', g.notes, 'm'));
+    const n = el('div', null, 'nums'); const u = g.unit === '%' ? '%' : ' ' + (g.unit || '');
+    const b1 = el('b', g.actual != null ? fmt(g.actual) + u : '—'); n.append(b1, el('div', `الأساس ${fmt(g.baseline)}${u} · المستهدف ${fmt(g.target)}${u}`, 'mut'));
+    if (S.canEdit) { const eb = el('button', 'تعديل', 'btn sm'); eb.type = 'button'; eb.addEventListener('click', () => openForm('goal', g)); n.append(eb); }
+    const max = Math.max(Number(g.target) || 0, Number(g.baseline) || 0, Number(g.actual) || 0, 1) * (g.unit === '%' ? 1 : 1.1);
+    const top = g.unit === '%' ? 100 : max;
+    const sc = el('div', null, 'gscale'); const bb = el('span', null, 'b'); bb.style.width = ((Number(g.baseline) || 0) / top * 100) + '%'; sc.append(bb);
+    const tg = el('span', null, 'tg'); tg.style.insetInlineStart = `calc(${(Number(g.target) || 0) / top * 100}% - 1px)`; tg.title = 'المستهدف'; sc.append(tg);
+    if (g.actual != null && g.actual !== '') { const a = el('span', null, 'a'); a.style.insetInlineStart = `calc(${(Number(g.actual)) / top * 100}% - 2px)`; a.title = 'المتحقق'; sc.append(a); }
+    d.append(left, n, sc); return d;
+  }));
+}
+function secChips(host, cur, onPick, counts) {
+  const items = [{ id: '', name: 'الكل' }, ...SECTIONS];
+  host.replaceChildren(...items.map((s) => {
+    const b = el('button', null, 'chip'); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === s.id));
+    if (s.id) { const d = el('span', null, 'dot'); d.style.setProperty('--sc', scol(s.id)); b.append(d); }
+    b.append(s.name); if (counts) b.append(el('span', String(counts(s.id)), 'n'));
+    b.addEventListener('click', () => onPick(s.id)); return b;
+  }));
+}
+function pCard(p) {
+  const b = el('button', null, 'pcard'); b.type = 'button'; b.style.setProperty('--sc', scol(p.section));
+  b.append(el('span', p.name, 't'));
+  const m = el('span', null, 'm'); m.append(`${dShort(p.start)} – ${dShort(p.end)}`); if (p.status !== 'مخطط') m.append(pill(p.status, pTone(p.status)));
+  b.append(m); b.addEventListener('click', () => openProject(p.id)); return b;
+}
+function renderAnnual() {
+  renderGoals();
+  const cnt = (id) => S.projects.filter((p) => !id || p.section === id).length;
+  secChips($('annual-chips'), S.annualSec, (id) => { S.annualSec = id; renderAnnual(); }, cnt);
+  const list = S.projects.filter((p) => !S.annualSec || p.section === S.annualSec).sort(byStart);
+  const host = $('quarters'); host.replaceChildren();
+  const range = ['يناير – مارس', 'أبريل – يونيو', 'يوليو – سبتمبر', 'أكتوبر – ديسمبر'];
+  const qEnd = ['03-31', '06-30', '09-30', '12-31'];
+  for (let q = 1; q <= 4; q++) {
+    const box = el('div', null, 'quarter'); const ps = list.filter((p) => qOf(p.start) === q || (qOf(p.start) === 0 && q === 1));
+    const qFrom = `${S.year}-${String((q - 1) * 3 + 1).padStart(2, '0')}-01`, qTo = `${S.year}-${qEnd[q - 1]}`;
+    const hr = S.cal !== 'g' ? hRange(qFrom, qTo) : '';
+    const rText = S.cal === 'h' && hr ? hr : (hr ? `${range[q - 1]} · ${hr}` : range[q - 1]);
+    const t = el('div', null, 'qt'); t.style.flexWrap = 'wrap'; t.append(el('h3', `الربع ${['الأول', 'الثاني', 'الثالث', 'الرابع'][q - 1]}`), el('span', `${rText} · ${ps.length} ${ps.length === 1 ? 'مشروع' : 'مشاريع'}`)); box.append(t);
+    ps.forEach((p) => box.append(pCard(p)));
+    if (!ps.length) box.append(el('p', 'لا مشاريع في هذا الربع.', 'note'));
+    if (S.canEdit) { const a = el('button', '+ مشروع في هذا الربع', 'btn sm'); a.type = 'button'; const m = String((q - 1) * 3 + 1).padStart(2, '0'); a.addEventListener('click', () => openForm('project', null, { section: S.annualSec || 'extra', start: `${S.year}-${m}-01`, end: `${S.year}-${m}-28` })); box.append(a); }
+    host.append(box);
+  }
+}
+
+// ---------- OPS
+function fillSelect(sel, items, allLabel) { const v = sel.value; sel.replaceChildren(new Option(allLabel, ''), ...items.map(([val, lab]) => new Option(lab, val))); if ([...sel.options].some((o) => o.value === v)) sel.value = v; }
+function renderOps() {
+  fillSelect($('o-sec'), SECTIONS.map((s) => [s.id, s.name]), 'كل الأقسام');
+  const sec = $('o-sec').value;
+  fillSelect($('o-proj'), S.projects.filter((p) => !sec || p.section === sec).sort(byStart).map((p) => [p.id, p.name]), 'كل المشاريع');
+  fillSelect($('o-com'), committeeNames().map((c) => [c, c]), 'كل اللجان');
+  const q = $('o-q').value, pid = $('o-proj').value, com = $('o-com').value, st = $('o-st').value, s = $('o-q2').value.trim();
+  let rows = S.tasks.filter((t) => {
+    const p = projById(t.projectId);
+    if (sec && (!p || p.section !== sec)) return false;
+    if (pid && t.projectId !== pid) return false;
+    if (com && t.committee !== com) return false;
+    if (q !== '' && String(Math.min(4, qOf(t.due) ?? -1)) !== q) return false;
+    if (st === 'open' && t.status === 'منجزة') return false;
+    if (st === 'late' && !isLate(t)) return false;
+    if (st && st !== 'open' && st !== 'late' && t.status !== st) return false;
+    if (s && !(`${t.title} ${t.owner || ''} ${p ? p.name : ''}`.includes(s))) return false;
+    return true;
+  }).sort((a, b) => String(a.due).localeCompare(String(b.due)) || String(a.start).localeCompare(String(b.start)));
+  const done = rows.filter((t) => t.status === 'منجزة').length, late = rows.filter(isLate).length;
+  $('ops-line').textContent = `${fmt(rows.length)} مهمة · ${fmt(done)} منجزة · ${fmt(late)} متأخرة. مرتبة حسب موعد الاستحقاق.`;
+  const body = $('ops-rows');
+  if (!rows.length) { const tr = el('tr'); const td = el('td', S.tasks.length ? 'لا مهام تطابق هذا الفلتر.' : 'لا مهام بعد. أضف أول مهمة من زر «+ مهمة».', 'mut'); td.colSpan = 8; tr.append(td); body.replaceChildren(tr); return; }
+  body.replaceChildren(...rows.map((t) => {
+    const p = projById(t.projectId); const tr = el('tr'); if (isLate(t)) tr.className = 'late';
+    const c1 = el('td'); const nb = el('button', t.title, 'linkish'); nb.type = 'button'; nb.addEventListener('click', () => openForm('task', t)); c1.append(nb);
+    const c2 = el('td'); if (p) { const pb = el('button', null, 'linkish'); pb.type = 'button'; pb.append(secTag(p.section)); pb.firstChild.lastChild.textContent = p.name; pb.addEventListener('click', () => openProject(p.id)); c2.append(pb); } else c2.textContent = '—';
+    const cs = el('td');
+    if (S.canEdit) { const sel = el('select'); sel.setAttribute('aria-label', 'حالة ' + t.title); T_STATUS.forEach((x) => sel.append(new Option(x))); sel.value = t.status || 'لم تبدأ'; sel.addEventListener('change', () => save('tasks', t.id, { ...strip(t), status: sel.value }, 'حُدّثت الحالة.')); cs.append(sel); }
+    else cs.append(pill(t.status || 'لم تبدأ', tTone(t.status)));
+    if (isLate(t)) cs.append(' ', pill('متأخرة', 'bad'));
+    const ce = el('td', null, 'edit-only'); if (S.canEdit) { const eb = el('button', 'تعديل', 'btn sm'); eb.type = 'button'; eb.addEventListener('click', () => openForm('task', t)); ce.append(eb); }
+    tr.append(c1, c2, el('td', t.committee || '—', 'mut nw'), el('td', t.owner || '—', 'hide-n mut'), el('td', dShort(t.start), 'nw mut'), el('td', dShort(t.due), 'nw'), cs, ce);
+    return tr;
+  }));
+}
+['o-q', 'o-sec', 'o-proj', 'o-com', 'o-st'].forEach((id) => $(id).addEventListener('change', renderOps));
+let ot; $('o-q2').addEventListener('input', () => { clearTimeout(ot); ot = setTimeout(renderOps, 150); });
+
+// ---------- PROJECTS
+function renderProjects() {
+  const cnt = (id) => S.projects.filter((p) => !id || p.section === id).length;
+  secChips($('proj-chips'), S.projSec, (id) => { S.projSec = id; renderProjects(); }, cnt);
+  $('proj-h').textContent = S.projSec ? SEC[S.projSec].long : 'كل المشاريع';
+  $('proj-note').textContent = S.projSec === 'extra' ? 'أي مشروع يطرأ خلال السنة يُضاف هنا، ويظهر تلقائياً في التقويم والخطة التشغيلية.' : 'مرتبة حسب تاريخ البداية. اضغط على المشروع لعرض تفاصيله ومهامه وتاريخ مشاركة المتطوعين فيه.';
+  const presetBtns = document.querySelectorAll('#v-projects [data-add="project"]'); presetBtns.forEach((b) => { b.dataset.preset = JSON.stringify({ section: S.projSec || 'extra' }); });
+  const list = S.projects.filter((p) => !S.projSec || p.section === S.projSec).sort(byStart);
+  $('school').hidden = S.projSec !== 'nfhm';
+  if (S.projSec === 'nfhm') renderSchool();
+  const g = $('proj-grid');
+  if (!list.length) { const e = el('div', null, 'empty'); e.style.gridColumn = '1 / -1'; e.append(el('p', S.projSec === 'extra' ? 'لا مشاريع إضافية حتى الآن.' : 'لا مشاريع في هذا القسم بعد.', null)); if (S.canEdit) { const b = el('button', '+ إضافة مشروع', 'btn primary'); b.type = 'button'; b.addEventListener('click', () => openForm('project', null, { section: S.projSec || 'extra' })); e.append(b); } g.replaceChildren(e); return; }
+  g.replaceChildren(...list.map((p) => {
+    const b = el('button', null, 'proj'); b.type = 'button'; b.style.setProperty('--sc', scol(p.section));
+    const r1 = el('div', null, 'row'); r1.append(secTag(p.section), pill(p.status || 'مخطط', pTone(p.status)), el('span', `الربع ${['', 'الأول', 'الثاني', 'الثالث', 'الرابع'][Math.max(1, Math.min(4, qOf(p.start) || 1))]}`));
+    const ts = tasksOf(p.id), dn = ts.filter((t) => t.status === 'منجزة').length, lt = ts.filter(isLate).length;
+    const r2 = el('div', null, 'row'); r2.append(el('span', `${dShort(p.start)} – ${dShort(p.end)}`), el('span', `القائد: ${p.lead || 'لم يُعيّن'}`));
+    const r3 = el('div', null, 'row'); r3.append(el('span', `المهام ${dn}/${ts.length}`), el('span', `المستهدف ${fmt(p.target)} متطوع`)); if (lt) r3.append(pill(`${lt} متأخرة`, 'bad'));
+    const m = el('div', null, 'meter'); const i = el('i'); i.style.width = (ts.length ? dn / ts.length * 100 : 0) + '%'; m.append(i);
+    b.append(r1, el('span', p.name, 't'), r2, r3, m); b.addEventListener('click', () => openProject(p.id)); return b;
+  }));
+}
+
+// ---------- school calendar (نفهمه صح)
+const SK = { term: 'فصل دراسي', break: 'إجازة', exam: 'اختبارات', event: 'مناسبة' };
+const SKC = { term: 'var(--accent)', break: 'var(--warn)', exam: 'var(--bad)', event: 'var(--s-nfhm)' };
+const overlap = (a1, a2, b1, b2) => a1 <= b2 && b1 <= a2;
+const days = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5) + 1;
+const schoolSorted = () => S.school.slice().sort((a, b) => String(a.start).localeCompare(String(b.start)));
+function breaksHit(start, end) { return S.school.filter((s) => s.kind === 'break' && s.start && overlap(start, end || start, s.start, s.end || s.start)); }
+function termAt(iso) { return S.school.find((s) => s.kind === 'term' && s.start <= iso && iso <= (s.end || s.start)); }
+function rangeTimeline(host, from, to, rows) {
+  host.replaceChildren();
+  const months = []; let y = Number(from.slice(0, 4)), m = Number(from.slice(5, 7));
+  const ty = Number(to.slice(0, 4)), tm = Number(to.slice(5, 7));
+  while (y < ty || (y === ty && m <= tm)) { months.push([y, m]); m++; if (m > 12) { m = 1; y++; } }
+  host.style.gridTemplateColumns = `150px repeat(${months.length}, minmax(0, 1fr))`;
+  host.style.minWidth = Math.max(820, 150 + months.length * 62) + 'px';
+  const r0 = `${months[0][0]}-${String(months[0][1]).padStart(2, '0')}-01`;
+  const last = months[months.length - 1]; const r1 = isoAdd(`${last[0] + (last[1] === 12 ? 1 : 0)}-${String(last[1] === 12 ? 1 : last[1] + 1).padStart(2, '0')}-01`, 0);
+  const t0 = new Date(r0 + 'T00:00:00').getTime(), span = new Date(r1 + 'T00:00:00').getTime() - t0;
+  const pos = (iso) => Math.min(1, Math.max(0, (new Date(iso + 'T00:00:00').getTime() - t0) / span));
+  const corner = el('div', null, 'corner'); corner.style.gridColumn = '1'; host.append(corner);
+  let c = 2; [...new Set(months.map((x) => x[0]))].forEach((yr) => { const n = months.filter((x) => x[0] === yr).length; const h = el('div', String(yr), 'yh'); h.style.gridColumn = `${c} / span ${n}`; host.append(h); c += n; });
+  months.forEach(([, mm], i) => { const h = el('div', MONTHS[mm - 1], 'mh'); h.style.gridColumn = String(2 + i); host.append(h); });
+  const eids = []; if (HF) [...new Set(months.map((x) => x[0]))].forEach((yr) => eidDays(yr).forEach((e) => { if (e.iso >= r0 && e.iso < r1) eids.push(e); }));
+  if (S.cal !== 'g' && HF) {
+    const hm = [...new Set(months.map((x) => x[0]))].flatMap((yr) => hMonths(yr)).filter((x) => x.to >= r0 && x.from < r1);
+    const merged = []; hm.forEach((x) => { const l = merged[merged.length - 1]; if (l && l.k === x.k) l.to = x.to; else merged.push({ ...x }); });
+    host.append(el('div', 'الهجري', 'hlab')); const row = el('div', null, 'hrow');
+    merged.forEach((x) => { const a = pos(x.from), b = pos(isoAdd(x.to, 1)); const s = el('div', x.m + (x.mn === 1 || x === merged[0] ? ' ' + x.y : ''), 'hm' + ([9, 12].includes(x.mn) ? ' hot' : '')); s.style.insetInlineStart = (a * 100) + '%'; s.style.width = ((b - a) * 100) + '%'; s.title = `${x.m} ${x.y}هـ`; row.append(s); });
+    eids.forEach((e) => { const l = el('div', null, 'eidline'); l.style.insetInlineStart = (pos(e.iso) * 100) + '%'; l.title = e.name; row.append(l); });
+    host.append(row);
+  }
+  rows.forEach((r) => {
+    const lab = el('div', null, 'lab'); const d = el('span', null, 'dot'); d.style.setProperty('--sc', r.color); lab.append(d, r.label); host.append(lab);
+    const lane = el('div', null, 'lane'); lane.style.backgroundSize = `calc(100% / ${months.length}) 100%`;
+    const slots = []; const items = r.items.filter((it) => it.start).sort((a, b) => a.start.localeCompare(b.start));
+    const MINF = ROWH > 28 ? 0.075 : 0;
+    items.forEach((it) => { let a = pos(it.start), b = pos(isoAdd(it.end || it.start, 1)); if (b <= 0 || a >= 1) return; if (MINF) { a = Math.min(a, 1 - MINF); b = Math.max(b, a + MINF); } let k = slots.findIndex((e) => e <= a); if (k < 0) { slots.push(0); k = slots.length - 1; } slots[k] = b + 0.003;
+      const bar = el('button', it.name, 'bar' + (it.cls ? ' ' + it.cls : '')); bar.type = 'button'; bar.style.setProperty('--sc', it.color || r.color);
+      bar.style.insetInlineStart = (a * 100) + '%'; bar.style.width = `max(${(b - a) * 100}%, 8px)`; bar.style.top = (6 + k * ROWH) + 'px'; bar.title = it.title || `${it.name} · ${dShort(it.start)} – ${dShort(it.end || it.start)}`;
+      if (it.onClick) bar.addEventListener('click', it.onClick); lane.append(bar); });
+    lane.style.minHeight = Math.max(40, slots.length * ROWH + 12) + 'px';
+    eids.forEach((e) => { const l = el('div', null, 'eidline'); l.style.insetInlineStart = (pos(e.iso) * 100) + '%'; lane.append(l); });
+    if (todayISO >= r0 && todayISO < r1) { const t = el('div', null, 'today'); t.style.insetInlineStart = (pos(todayISO) * 100) + '%'; t.title = 'اليوم'; lane.append(t); }
+    if (!items.length) { const e = el('span', r.empty || 'لا شيء', 'mut'); e.style.cssText = 'position:absolute;top:10px;inset-inline-start:10px;font-size:.78rem'; lane.append(e); }
+    host.append(lane);
+  });
+}
+function renderSchool() {
+  const sc = schoolSorted(); const nf = S.projects.filter((p) => p.section === 'nfhm').sort(byStart);
+  const yr = (S.schoolMeta && S.schoolMeta.title) || 'التقويم الدراسي';
+  $('sch-title').textContent = yr;
+  $('sch-sub').textContent = 'الفصول والإجازات حسب تقويم وزارة التعليم للتعليم العام، ومشاريع نفهمه صح فوقها لتظهر أي فترة تتعارض مع الإجازات.';
+  const k = $('sch-kpis'); k.replaceChildren();
+  if (!sc.length) { $('sch-tl').replaceChildren(); $('sch-rows').replaceChildren(); $('sch-conf').replaceChildren(el('div', 'لم يُضف التقويم الدراسي بعد. أضف الفصول والإجازات من زر «+ فترة أو إجازة».', 'empty')); return; }
+  const add = (v, l, cls) => { const d = el('div', null, 'kpi' + (cls ? ' ' + cls : '')); d.append(el('div', v, 'v'), el('div', l, 'l')); k.append(d); };
+  const terms = sc.filter((s) => s.kind === 'term');
+  const cur = termAt(todayISO), nextTerm = terms.find((t) => t.start > todayISO);
+  if (cur) add(`${days(todayISO, cur.end)} يوماً`, `متبقية على نهاية ${cur.name}`);
+  else if (nextTerm) add(`${days(todayISO, nextTerm.start) - 1} يوماً`, `حتى بداية ${nextTerm.name}`);
+  const nb = sc.find((s) => s.kind === 'break' && (s.end || s.start) >= todayISO);
+  if (nb) add(nb.start <= todayISO ? 'الآن' : dShort(nb.start), nb.start <= todayISO ? nb.name : 'الإجازة القادمة: ' + nb.name);
+  const rF = (S.schoolMeta && S.schoolMeta.from) || '0000', rT = (S.schoolMeta && S.schoolMeta.to) || '9999';
+  terms.filter((t) => overlap(t.start, t.end, rF, rT)).forEach((t) => { const br = sc.filter((s) => s.kind === 'break' && overlap(s.start, s.end, t.start, t.end)); let off = 0; br.forEach((b) => { const a = b.start > t.start ? b.start : t.start, e = b.end < t.end ? b.end : t.end; off += Math.max(0, days(a, e)); }); add(`${days(t.start, t.end)} يوماً`, `${t.name}${t.est ? ' (تقديري)' : ''}: ${dShort(t.start)} – ${dShort(t.end)}، منها ${off} يوم إجازات`); });
+  const conflicts = [];
+  const rFrom = (S.schoolMeta && S.schoolMeta.from) || sc[0].start;
+  const rTo = (S.schoolMeta && S.schoolMeta.to) || sc.reduce((m, s) => ((s.end || s.start) > m ? (s.end || s.start) : m), sc[0].start);
+  const cls = (s) => [s.kind === 'break' ? 'brk' : '', s.est ? 'pending' : ''].filter(Boolean).join(' ');
+  const tip = (s) => `${s.name}${s.est ? ' (تقديري)' : ''} · ${dShort(s.start)} – ${dShort(s.end || s.start)}`;
+  rangeTimeline($('sch-tl'), rFrom, rTo, [
+    { label: 'الفصول الدراسية', color: SKC.term, items: sc.filter((s) => s.kind === 'term' || s.kind === 'exam').map((s) => ({ name: s.name, start: s.start, end: s.end, cls: cls(s), title: tip(s), color: SKC[s.kind], onClick: () => openForm('school', s) })) },
+    { label: 'الإجازات', color: SKC.break, items: sc.filter((s) => s.kind === 'break' || s.kind === 'event').map((s) => ({ name: s.name, start: s.start, end: s.end, cls: cls(s), title: tip(s), color: SKC[s.kind], onClick: () => openForm('school', s) })) },
+    { label: 'مشاريع نفهمه صح', color: 'var(--s-nfhm)', empty: 'لا مشاريع بعد', items: nf.map((p) => ({ name: p.name, start: p.start, end: p.end, cls: p.status === 'بانتظار الاتفاق' ? 'pending' : '', onClick: () => openProject(p.id) })) },
+  ]);
+  nf.forEach((p) => breaksHit(p.start, p.end).forEach((b) => conflicts.push({ text: `«${p.name}» (${dShort(p.start)} – ${dShort(p.end)}) يتقاطع مع ${b.name} (${dShort(b.start)} – ${dShort(b.end)}).`, go: () => openProject(p.id) })));
+  S.tasks.filter((t) => { const p = projById(t.projectId); return p && p.section === 'nfhm' && t.status !== 'منجزة'; }).forEach((t) => { const b = breaksHit(t.due, t.due)[0]; if (b) conflicts.push({ text: `مهمة «${t.title}» تستحق ${dShort(t.due)} وهو داخل ${b.name}.`, go: () => openForm('task', t) }); });
+  const cf = $('sch-conf'); cf.replaceChildren();
+  if (conflicts.length) { cf.append(el('h3', `تعارضات مع الإجازات (${conflicts.length})`)); conflicts.forEach((c) => { const d = el('div', null, 'conf'); d.append(el('span', c.text)); const b = el('button', 'عرض', 'btn sm'); b.type = 'button'; b.addEventListener('click', c.go); d.append(b); cf.append(d); }); }
+  else cf.append(el('p', 'لا تتعارض مشاريع نفهمه صح ولا مهامها مع الإجازات الدراسية.', 'note'));
+  $('sch-rows').replaceChildren(...sc.filter((s) => overlap(s.start, s.end || s.start, rFrom, rTo)).map((s) => { const tr = el('tr'); const c1 = el('td'); const d = el('span', null, 'dot'); d.style.setProperty('--sc', SKC[s.kind] || SKC.event); c1.append(d, ' ', s.name); if (s.est) c1.append(' ', pill('تقديري', 'warn'));
+    const ce = el('td', null, 'edit-only'); ce.hidden = !S.canEdit; if (S.canEdit) { const b = el('button', 'تعديل', 'btn sm'); b.type = 'button'; b.addEventListener('click', () => openForm('school', s)); ce.append(b); }
+    tr.append(c1, el('td', SK[s.kind] || '—', 'mut nw'), el('td', dShort(s.start), 'nw'), el('td', s.end && s.end !== s.start ? dShort(s.end) : '—', 'nw'), el('td', s.end ? days(s.start, s.end) + ' يوماً' : 'يوم', 'hide-n mut nw'), el('td', s.notes || '', 'hide-n mut'), ce); return tr; }));
+  $('sch-src').textContent = (S.schoolMeta && S.schoolMeta.source) || '';
+}
+
+// ---------- project drawer
+function openProject(id) { S.openProject = id; renderDrawer(); $('drawer-ov').hidden = false; document.body.style.overflow = 'hidden'; setTimeout(() => $('dr-close') && $('dr-close').focus(), 0); }
+function closeDrawer() { S.openProject = null; $('drawer-ov').hidden = true; document.body.style.overflow = ''; }
+$('drawer-ov').addEventListener('click', (e) => { if (e.target === $('drawer-ov')) closeDrawer(); });
+function renderDrawer() {
+  const p = projById(S.openProject); const d = $('drawer');
+  if (!p) { if (S.openProject) closeDrawer(); return; }
+  d.replaceChildren();
+  const head = el('div', null, 'head'); const tt = el('div'); tt.style.display = 'grid'; tt.style.gap = '4px'; tt.append(secTag(p.section)); const h = el('h2', p.name); h.id = 'dr-title'; h.style.fontSize = '1.2rem'; tt.append(h);
+  const acts = el('div', null, 'controls'); if (S.canEdit) { const e = el('button', 'تعديل', 'btn sm'); e.type = 'button'; e.addEventListener('click', () => openForm('project', p)); acts.append(e); }
+  const c = el('button', 'إغلاق', 'btn sm'); c.type = 'button'; c.id = 'dr-close'; c.addEventListener('click', closeDrawer); acts.append(c);
+  head.append(tt, acts); d.append(head);
+  const dl = el('dl', null, 'dl'); const row = (k, v) => { dl.append(el('dt', k)); const dd = el('dd'); if (v instanceof Node) dd.append(v); else dd.textContent = v == null || v === '' ? '—' : v; dl.append(dd); };
+  row('الحالة', pill(p.status || 'مخطط', pTone(p.status)));
+  row('بالميلادي', p.start ? `${gShort(p.start)} – ${gShort(p.end || p.start)} ${String(p.start).slice(0, 4) === String(S.year) ? S.year : ''}` : '');
+  const hj = p.start ? `${hijri(p.start)} – ${hijri(p.end || p.start)}` : ''; if (hj) row('بالهجري', hj);
+  if (p.start && p.end) { const n = Math.round((new Date(p.end) - new Date(p.start)) / 864e5) + 1; row('المدة', `${n} يوماً`); }
+  if (p.section === 'nfhm' && S.school.length && p.start) {
+    const t = termAt(p.start), br = breaksHit(p.start, p.end);
+    const box = el('span'); box.append(t ? `يبدأ في ${t.name}` : 'يبدأ خارج الفصول الدراسية');
+    if (br.length) { box.append(el('br')); const w = el('span', 'يتقاطع مع: ' + br.map((b) => `${b.name} (${dShort(b.start)} – ${dShort(b.end)})`).join('، ')); w.style.color = 'var(--warn)'; box.append(w); }
+    row('التقويم الدراسي', box);
+  }
+  row('الربع', `الربع ${['', 'الأول', 'الثاني', 'الثالث', 'الرابع'][Math.max(1, Math.min(4, qOf(p.start) || 1))]}`);
+  row('القائد', p.lead || 'لم يُعيّن');
+  row('اللجان', (p.committees || []).join('، '));
+  row('المتطوعون', `المستهدف ${fmt(p.target)} · المتحقق ${fmt(p.actual)}`);
+  if (p.budget != null && p.budget !== '') row('الميزانية', fmt(p.budget) + ' ريال');
+  const g = S.goals.find((x) => x.id === p.goal); row('الهدف السنوي', g ? g.title : '—');
+  row('الوصف', p.description); if (p.kpi) row('مؤشرات النجاح', p.kpi); if (p.notes) row('ملاحظات', p.notes);
+  d.append(dl);
+  // history
+  const fams = p.families || [];
+  if (S.snap && fams.length) {
+    const box = el('div', null, 'card'); box.style.padding = '12px'; box.append(el('h3', 'المتطوعون في النسخ السابقة'));
+    const rows = []; fams.forEach((f) => { const v = (S.snap.families || {})[f]; if (v) Object.entries(v).forEach(([y, n]) => rows.push({ f, y, n })); });
+    if (rows.length) { const max = Math.max(...rows.map((r) => r.n)) * 1.1; const hb = el('div', null, 'hbars'); rows.sort((a, b) => a.y.localeCompare(b.y)).forEach((r) => { const rr = el('div', null, 'row'); rr.append(el('div', `${r.y}${fams.length > 1 ? ' · ' + r.f : ''}`, 'lab')); const tr = el('div', null, 'track'); const s = el('div', null, 'sc'); s.style.setProperty('--sc', scol(p.section)); s.style.width = (r.n / max * 100) + '%'; tr.append(s, el('span', fmt(r.n), 'val')); rr.append(tr); hb.append(rr); }); box.append(hb, el('p', 'عدد الأعضاء الفريدين المسجلين في السنة، من نظام التسجيل.', 'note')); }
+    else box.append(el('p', 'لا توجد بيانات سابقة لهذا المشروع في نظام التسجيل.', 'note'));
+    d.append(box);
+  }
+  // tasks
+  const ts = tasksOf(p.id).sort((a, b) => String(a.due).localeCompare(String(b.due)));
+  const tb = el('div', null, 'card'); tb.style.padding = '12px';
+  const th = el('div', null, 'head'); th.append(el('h3', `مهام المشروع (${ts.filter((t) => t.status === 'منجزة').length}/${ts.length} منجزة)`));
+  if (S.canEdit) { const a = el('button', '+ مهمة', 'btn sm'); a.type = 'button'; a.addEventListener('click', () => openForm('task', null, { projectId: p.id, start: p.start, due: p.start })); th.append(a); }
+  tb.append(th);
+  if (!ts.length) tb.append(el('p', 'لا مهام لهذا المشروع بعد.', 'note'));
+  else { const box = el('div', null, 'tbox'); box.style.maxHeight = '360px'; const tbl = el('table'); const hd = el('thead'); const hr = el('tr'); ['المهمة', 'اللجنة', 'الاستحقاق', 'الحالة'].forEach((x) => hr.append(el('th', x))); hd.append(hr); const bd = el('tbody');
+    ts.forEach((t) => { const tr = el('tr'); if (isLate(t)) tr.className = 'late'; const c1 = el('td'); const nb = el('button', t.title, 'linkish'); nb.type = 'button'; nb.addEventListener('click', () => openForm('task', t)); c1.append(nb); const cs = el('td'); cs.append(pill(t.status || 'لم تبدأ', tTone(t.status))); tr.append(c1, el('td', t.committee || '—', 'mut nw'), el('td', dShort(t.due), 'nw'), cs); bd.append(tr); });
+    tbl.append(hd, bd); box.append(tbl); tb.append(box); }
+  d.append(tb);
+  if (S.regUrl) { const a = el('a', 'فتح نظام التسجيل لمعرفة أسماء المسجلين ↗'); a.href = S.regUrl; a.target = '_blank'; a.rel = 'noopener'; a.style.fontSize = '.85rem'; d.append(a); }
+}
+
+// ---------- VOLUNTEERS
+function renderVol() {
+  const s = S.snap;
+  if (!s) { $('vol-src').textContent = 'لم تُربط بيانات المتطوعين بعد.'; ['vol-kpis', 'vol-years', 'vol-secs', 'vol-dist', 'vol-age', 'vol-proj'].forEach((id) => $(id).replaceChildren()); renderVolPlan(); return; }
+  const src = $('vol-src'); src.replaceChildren(`أرقام المتطوعين من «${s.source}» بتاريخ ${dShort(s.updated)}. تقيس التسجيل لا الحضور، ولا تحوي جوالات أو هويات. `);
+  if (s.sourceUrl) { const a = el('a', 'فتح نظام التسجيل ↗'); a.href = s.sourceUrl; a.target = '_blank'; a.rel = 'noopener'; src.append(a); }
+  const last = s.byYear[s.byYear.length - 1], ret = s.retention[s.retention.length - 1];
+  const k = $('vol-kpis'); k.replaceChildren();
+  const add = (v, l, cls) => { const d = el('div', null, 'kpi' + (cls ? ' ' + cls : '')); d.append(el('div', v, 'v'), el('div', l, 'l')); k.append(d); };
+  add(fmt(s.members), 'عضو فريد في قاعدة التسجيل'); add(fmt(last.total), `متطوع في مشاريع ${last.y}`); add(fmt(last.new), `جديد لأول مرة في ${last.y}`);
+  add(ret.pct + '%', `عادوا من ${ret.from} إلى ${ret.to}`, ret.pct < (s.retention[0] || {}).pct ? 'warn' : ''); add(fmt(s.committeeMembers), 'سجّلوا في اللجان');
+  // years columns
+  const max = Math.max(...s.byYear.map((y) => y.total)) * 1.12; const yc = $('vol-years');
+  yc.replaceChildren(...s.byYear.map((y) => { const c = el('div', null, 'c'); c.append(el('span', fmt(y.total), 'lv')); const n = el('i', null, 'n'); n.style.height = (y.new / max * 140) + 'px'; const r = el('i', null, 'r'); r.style.height = ((y.total - y.new) / max * 140) + 'px'; c.append(n, r, el('span', String(y.y), 'x')); c.title = `${y.y}: ${fmt(y.total - y.new)} عائد، ${fmt(y.new)} جديد`; return c; }));
+  $('vol-ret').textContent = 'نسبة العائدين للسنة التالية: ' + s.retention.map((r) => `${r.from}→${r.to}: ${r.pct}%`).join(' · ');
+  // sections by year
+  const years = s.byYear.map((y) => String(y.y)).filter((y) => Number(y) >= 2023);
+  const yh = $('vol-ychips'); yh.replaceChildren(...years.map((y) => { const b = el('button', y, 'chip'); b.type = 'button'; b.setAttribute('aria-pressed', String(S.volYear === y)); b.addEventListener('click', () => { S.volYear = y; renderVol(); }); return b; }));
+  const secs = SECTIONS.filter((x) => s.sections[x.id]).map((x) => ({ x, n: s.sections[x.id][S.volYear] || 0 }));
+  const smax = Math.max(1, ...secs.map((v) => v.n)) * 1.15;
+  $('vol-secs').replaceChildren(...secs.map(({ x, n }) => { const r = el('div', null, 'row'); r.append(el('div', x.name, 'lab')); const tr = el('div', null, 'track'); const b = el('div', null, 'sc'); b.style.setProperty('--sc', scol(x.id)); b.style.width = (n / smax * 100) + '%'; tr.append(b, el('span', fmt(n), 'val')); r.append(tr); return r; }));
+  const dist = [['1', 'مشروع واحد'], ['2-4', 'من 2 إلى 4'], ['5+', '5 مشاريع فأكثر']].map(([k2, l]) => ({ l, n: s.dist[k2] || 0 }));
+  const dmax = Math.max(...dist.map((d) => d.n)) * 1.15; const tot = dist.reduce((a, d) => a + d.n, 0);
+  $('vol-dist').replaceChildren(...dist.map((d) => { const r = el('div', null, 'row'); r.append(el('div', d.l, 'lab')); const tr = el('div', null, 'track'); const b = el('div', null, 's1'); b.style.width = (d.n / dmax * 100) + '%'; tr.append(b, el('span', `${fmt(d.n)} (${Math.round(d.n / tot * 100)}%)`, 'val')); r.append(tr); return r; }));
+  const ages = ['15–17', '18–21', '22–25', '26+'].map((a) => ({ a, n: s.age2026[a] || 0 })); const at = ages.reduce((x, y) => x + y.n, 0); const amax = Math.max(...ages.map((x) => x.n)) * 1.15;
+  $('vol-age').replaceChildren(...ages.map((x) => { const r = el('div', null, 'row'); r.append(el('div', x.a + ' سنة', 'lab')); const tr = el('div', null, 'track'); const b = el('div', null, 's1'); b.style.width = (x.n / amax * 100) + '%'; tr.append(b, el('span', `${fmt(x.n)} (${Math.round(x.n / at * 100)}%)`, 'val')); r.append(tr); return r; }));
+  const g = s.gender2026, gt = (g['أنثى'] || 0) + (g['ذكر'] || 0) + (g['؟'] || 0);
+  $('vol-g').textContent = `من سُجّل تاريخ ميلاده فقط (${fmt(at)}). الجنس في 2026: ${Math.round((g['أنثى'] || 0) / gt * 100)}% متطوعات، ${Math.round((g['ذكر'] || 0) / gt * 100)}% متطوعون. فئة 15–17 تحتاج موافقة ولي الأمر.`;
+  const pr = (s.projects || []).slice().sort((a, b) => b.year - a.year || b.reg - a.reg);
+  $('vol-proj').replaceChildren(...pr.map((p) => { const tr = el('tr'); const c = el('td'); c.append(secTag(p.section)); tr.append(el('td', p.name), c, el('td', String(p.year), 'mut'), el('td', fmt(p.reg), 'num'), el('td', `${fmt(p.new)} (${p.reg ? Math.round(p.new / p.reg * 100) : 0}%)`, 'mut')); return tr; }));
+  renderVolPlan();
+}
+function renderVolPlan() {
+  const fam = (S.snap && S.snap.families) || {};
+  const list = S.projects.slice().sort(byStart);
+  $('vol-plan').replaceChildren(...list.map((p) => {
+    let lastN = null, lastY = ''; (p.families || []).forEach((f) => { Object.entries(fam[f] || {}).forEach(([y, n]) => { if (y > lastY) { lastY = y; lastN = n; } else if (y === lastY) lastN += n; }); });
+    const tr = el('tr'); const c = el('td'); const nb = el('button', p.name, 'linkish'); nb.type = 'button'; nb.addEventListener('click', () => openProject(p.id)); c.append(nb);
+    const pct = p.actual != null && p.target ? ` (${Math.round(p.actual / p.target * 100)}%)` : '';
+    tr.append(c, el('td', String(Math.max(1, Math.min(4, qOf(p.start) || 1))), 'mut'), el('td', fmt(p.target), 'num'), el('td', fmt(p.actual) + pct), el('td', lastY ? `${fmt(lastN)} في ${lastY}` : '—', 'hide-n mut'));
+    return tr;
+  }));
+}
+
+// ---------- COMMITTEES
+function renderCom() {
+  const g = $('com-grid'); const list = S.committees.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), 'ar'));
+  const weak = list.filter((c) => c.status !== 'نشطة').length;
+  $('com-note').textContent = `${list.length} لجنة مسجلة · ${weak} تحتاج دعماً أو قائداً. مهام كل لجنة تأتي من الخطة التشغيلية.`;
+  if (!list.length) { g.replaceChildren(el('div', 'لم تُضف لجان بعد.', 'empty')); return; }
+  g.replaceChildren(...list.map((c) => {
+    const d = el('div', null, 'com');
+    const h = el('div', null, 'head'); h.append(el('h3', c.name), pill(c.status || '—', cTone(c.status))); d.append(h);
+    if (c.mission) d.append(el('p', c.mission, 'note'));
+    const kv = el('dl', null, 'kv'); const r = (k, v) => { kv.append(el('dt', k), el('dd', v)); };
+    r('القائد', c.lead || 'لم يُعيّن'); r('النائب', c.deputy || '—');
+    const part = c.members && c.active != null ? ` · المشاركة ${Math.round(c.active / c.members * 100)}%` : '';
+    r('الأعضاء', `${fmt(c.members)}${c.active != null ? ` · النشطون ${fmt(c.active)}` : ''}${part}`);
+    const ts = S.tasks.filter((t) => t.committee === c.name), open = ts.filter((t) => t.status !== 'منجزة'), late = ts.filter(isLate).length;
+    const next = open.slice().sort((a, b) => String(a.due).localeCompare(String(b.due)))[0];
+    r('المهام', `${ts.length} في الخطة · ${open.length} مفتوحة${late ? ` · ${late} متأخرة` : ''}`);
+    r('المهمة التالية', next ? `${next.title} (${dShort(next.due)})` : '—');
+    d.append(kv);
+    if (c.notes) d.append(el('p', c.notes, 'note'));
+    const acts = el('div', null, 'controls');
+    const vb = el('button', 'مهام اللجنة', 'btn sm'); vb.type = 'button'; vb.addEventListener('click', () => { renderOps(); $('o-com').value = c.name; $('o-st').value = 'open'; renderOps(); setTab('ops'); }); acts.append(vb);
+    if (S.canEdit) { const eb = el('button', 'تعديل', 'btn sm'); eb.type = 'button'; eb.addEventListener('click', () => openForm('committee', c)); acts.append(eb); }
+    d.append(acts); return d;
+  }));
+}
+
+// ---------- forms
+const SCHEMA = {
+  project: { col: 'projects', title: 'مشروع', fields: () => [
+    ['name', 'اسم المشروع', 'text', { wide: true, req: true }], ['section', 'القسم', 'select', { opts: SECTIONS.map((s) => [s.id, s.long]) }],
+    ['status', 'الحالة', 'select', { opts: P_STATUS.map((x) => [x, x]) }], ['start', 'البداية', 'date', { req: true }], ['end', 'النهاية', 'date', { req: true }],
+    ['lead', 'قائد المشروع', 'text'], ['target', 'المتطوعون المستهدفون', 'number'], ['actual', 'المتطوعون الفعليون', 'number'], ['budget', 'الميزانية (ريال)', 'number'],
+    ['goal', 'الهدف السنوي', 'select', { opts: [['', 'بدون'], ...S.goals.map((g) => [g.id, g.title])] }],
+    ['committees', 'اللجان المشاركة', 'checks', { opts: S.committees.map((c) => c.name), wide: true }],
+    ['families', 'ربطه بمشاريع نظام التسجيل', 'checks', { opts: Object.keys((S.snap && S.snap.families) || {}), wide: true }],
+    ['description', 'الوصف', 'textarea', { wide: true }], ['kpi', 'مؤشرات النجاح', 'textarea', { wide: true }], ['notes', 'ملاحظات', 'textarea', { wide: true }]] },
+  task: { col: 'tasks', title: 'مهمة', fields: () => [
+    ['title', 'المهمة', 'text', { wide: true, req: true }], ['projectId', 'المشروع', 'select', { opts: S.projects.slice().sort(byStart).map((p) => [p.id, p.name]) }],
+    ['committee', 'اللجنة', 'select', { opts: committeeNames().map((c) => [c, c]) }], ['owner', 'المسؤول', 'text'],
+    ['start', 'من', 'date'], ['due', 'الاستحقاق', 'date', { req: true }], ['status', 'الحالة', 'select', { opts: T_STATUS.map((x) => [x, x]) }], ['notes', 'ملاحظات', 'textarea', { wide: true }]] },
+  committee: { col: 'committees', title: 'لجنة', fields: () => [
+    ['name', 'اسم اللجنة', 'text', { req: true }], ['status', 'الحالة', 'select', { opts: C_STATUS.map((x) => [x, x]) }], ['lead', 'القائد', 'text'], ['deputy', 'النائب', 'text'],
+    ['members', 'عدد الأعضاء', 'number'], ['active', 'النشطون', 'number'], ['mission', 'المهام الأساسية', 'textarea', { wide: true }], ['notes', 'ملاحظات', 'textarea', { wide: true }]] },
+  school: { col: 'school', title: 'فترة', fields: () => [
+    ['name', 'الاسم', 'text', { wide: true, req: true }], ['kind', 'النوع', 'select', { opts: Object.entries(SK) }],
+    ['start', 'من', 'date', { req: true }], ['end', 'إلى', 'date'], ['est', 'التأكيد', 'select', { opts: [['', 'مؤكد من الوزارة'], ['1', 'تقديري']] }], ['notes', 'ملاحظات', 'textarea', { wide: true }]] },
+  goal: { col: 'goals', title: 'هدف', fields: () => [
+    ['title', 'الهدف', 'text', { wide: true, req: true }], ['metric', 'المؤشر', 'text', { wide: true }], ['unit', 'الوحدة', 'text'],
+    ['baseline', 'خط الأساس', 'number'], ['target', 'المستهدف', 'number'], ['actual', 'المتحقق', 'number'], ['notes', 'ملاحظات', 'textarea', { wide: true }]] },
+};
+const strip = (o) => { const c = { ...o }; delete c.id; Object.keys(c).forEach((k) => { if (k.startsWith('_')) delete c[k]; }); return c; };
+const newId = (p) => p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+function closeModal() { $('modal-ov').hidden = true; if ($('drawer-ov').hidden) document.body.style.overflow = ''; }
+$('modal-ov').addEventListener('click', (e) => { if (e.target === $('modal-ov')) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('modal-ov').hidden) closeModal(); else if (!$('drawer-ov').hidden) closeDrawer(); } });
+function openForm(kind, doc, preset) {
+  const sc = SCHEMA[kind]; const m = $('modal'); m.replaceChildren();
+  const ro = !S.canEdit; const data = doc ? { ...doc } : { ...(kind === 'project' ? { status: 'مخطط', section: 'extra', committees: [], families: [] } : kind === 'task' ? { status: 'لم تبدأ', committee: 'الإدارة' } : kind === 'committee' ? { status: 'نشطة' } : kind === 'school' ? { kind: 'break' } : { unit: '%' }), ...(preset || {}) };
+  if (ro && !doc) return;
+  const h = el('h2', ro ? sc.title : (doc ? 'تعديل ' + sc.title : sc.title + ' جديد' + (kind === 'task' || kind === 'committee' ? 'ة' : ''))); h.id = 'mo-title'; m.append(h);
+  const form = el('form'); form.noValidate = true; const fs = el('div', null, 'fields'); const inputs = {};
+  sc.fields().forEach(([k, lab, type, o = {}]) => {
+    const l = el('label', lab, 'f' + (o.wide ? ' wide' : '')); let inp;
+    if (type === 'select') { inp = el('select'); o.opts.forEach(([v, t]) => inp.append(new Option(t, v))); inp.value = data[k] ?? (o.opts[0] || [''])[0]; }
+    else if (type === 'textarea') { inp = el('textarea'); inp.value = data[k] ?? ''; }
+    else if (type === 'checks') { inp = el('div', null, 'checks'); const cur = new Set(data[k] || []); if (!o.opts.length) inp.append(el('span', 'لا خيارات متاحة.', 'mut')); o.opts.forEach((opt, i) => { const cl = el('label'); const cb = el('input'); cb.type = 'checkbox'; cb.value = opt; cb.checked = cur.has(opt); cb.id = `f-${kind}-${k}-${i}`; cb.disabled = ro; cl.append(cb, opt); inp.append(cl); }); }
+    else { inp = el('input'); inp.type = type; inp.value = data[k] ?? ''; if (type === 'number') inp.step = 'any'; }
+    if (type !== 'checks') { inp.id = `f-${kind}-${k}`; inp.disabled = ro; }
+    inputs[k] = [inp, type, o]; l.append(inp);
+    if (type === 'date' && HF) { const hint = el('span', '', 'hint'); const upd = () => { hint.textContent = inp.value ? 'يوافق ' + hijri(inp.value) : 'التاريخ بالميلادي، ويظهر هنا ما يوافقه بالهجري'; }; upd(); inp.addEventListener('input', upd); inp.addEventListener('change', upd); l.append(hint); }
+    fs.append(l);
+  });
+  form.append(fs);
+  const err = el('p', '', 'note'); err.style.color = 'var(--bad)'; err.hidden = true; form.append(err);
+  const acts = el('div', null, 'controls'); acts.style.justifyContent = 'space-between';
+  const left = el('div', null, 'controls'); const right = el('div', null, 'controls');
+  if (!ro) { const sv = el('button', 'حفظ', 'btn primary'); sv.type = 'submit'; right.append(sv); }
+  const cn = el('button', ro ? 'إغلاق' : 'إلغاء', 'btn'); cn.type = 'button'; cn.addEventListener('click', closeModal); right.append(cn);
+  if (!ro && doc) { const del = el('button', 'حذف', 'btn danger'); del.type = 'button'; del.addEventListener('click', async () => {
+    if (!del.dataset.armed) { del.dataset.armed = '1'; const extra = kind === 'project' ? ` و${tasksOf(doc.id).length} مهمة تابعة له` : ''; del.textContent = `تأكيد حذف ${sc.title}${extra}`; return; }
+    del.disabled = true;
+    try { if (kind === 'project') { for (const t of tasksOf(doc.id)) await S.db.collection('tasks').doc(t.id).delete(); if (S.openProject === doc.id) closeDrawer(); }
+      await S.db.collection(sc.col).doc(doc.id).delete(); closeModal(); say('تم الحذف.'); } catch (e) { say(errText(e), true); del.disabled = false; }
+  }); left.append(del); }
+  if (ro) form.append(el('p', 'العرض فقط. التعديل متاح للإدارة.', 'ro-note'));
+  acts.append(left, right); form.append(acts);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault(); if (ro) return;
+    const out = doc ? strip(doc) : {};
+    for (const [k, [inp, type, o]] of Object.entries(inputs)) {
+      if (type === 'checks') out[k] = [...inp.querySelectorAll('input:checked')].map((c) => c.value);
+      else if (type === 'number') out[k] = inp.value === '' ? null : Number(inp.value);
+      else out[k] = inp.value.trim();
+      if (o.req && (out[k] == null || out[k] === '')) { err.hidden = false; err.textContent = `أدخل «${inp.closest('label').firstChild.textContent}».`; inp.focus(); return; }
+    }
+    if (out.start && out.end && out.end < out.start) { err.hidden = false; err.textContent = 'تاريخ النهاية قبل البداية. صحّح أحد التاريخين.'; return; }
+    if (out.start && out.due && out.due < out.start) { err.hidden = false; err.textContent = 'تاريخ الاستحقاق قبل تاريخ البدء.'; return; }
+    out.updated = todayISO;
+    const id = doc ? doc.id : newId({ project: 'p', task: 't', committee: 'c', goal: 'g', school: 's' }[kind]);
+    const ok = await save(sc.col, id, out, doc ? 'حُفظت التعديلات.' : 'تمت الإضافة.');
+    if (ok) { closeModal(); if (kind === 'project' && !doc) openProject(id); }
+  });
+  m.append(form); $('modal-ov').hidden = false; document.body.style.overflow = 'hidden';
+  setTimeout(() => { const f = m.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])') || cn; f.focus(); }, 0);
+}
+function errText(e) { const c = e && e.code; if (c === 'invalid_argument') return 'لا تملك صلاحية التعديل، أو أن البيانات غير صالحة.'; if (c === 'quota_exceeded') return 'امتلأت سعة قاعدة البيانات. احذف عناصر قديمة ثم أعد المحاولة.'; return 'تعذر الحفظ. تحقق من الاتصال وأعد المحاولة.'; }
+async function save(col, id, data, okMsg) {
+  try { await S.db.collection(col).doc(id).set(data); say(okMsg); return true; }
+  catch (e) { if (e && e.code === 'unavailable') { try { await new Promise((r) => setTimeout(r, 600 + Math.random() * 600)); await S.db.collection(col).doc(id).set(data); say(okMsg); return true; } catch (e2) { say(errText(e2), true); return false; } } say(errText(e), true); return false; }
+}
+
+// ---------- print & download (calendar, timeline, school calendar)
+const CAL_LABEL = { both: 'هجري وميلادي', h: 'هجري', g: 'ميلادي' };
+const EXPORTS = {
+  year: { title: () => `تقويم احتواء ${S.year} بالأرباع`, file: () => `تقويم احتواء ${S.year}` },
+  quarters: { title: () => `التقويم المبدئي بالأرباع ${S.year}`, file: () => `التقويم بالأرباع ${S.year}` },
+  school: { title: () => (S.schoolMeta && S.schoolMeta.title) || 'التقويم الدراسي - نفهمه صح', file: () => `التقويم الدراسي نفهمه صح ${S.year}` },
+};
+const QN = ['الأول', 'الثاني', 'الثالث', 'الرابع'];
+function psHead(kind, sub) {
+  const b = el('div', null, 'ps-block'); const h = el('div', null, 'ps-head'); const t = el('div');
+  t.append(el('h1', EXPORTS[kind].title()), el('p', sub)); h.append(t, el('div', 'مؤسسة احتواء', 'org')); b.append(h); return b;
+}
+function psTable(heads, rows, caption) {
+  // split long tables so each chunk fits on one page
+  const out = []; const per = 16;
+  for (let i = 0; i < Math.max(1, rows.length); i += per) {
+    const b = el('div', null, 'ps-block'); if (caption) b.append(el('h2', caption + (i ? ' (تابع)' : '')));
+    const t = el('table'); const th = el('tr'); heads.forEach((x) => th.append(el('th', x))); const hd = el('thead'); hd.append(th); t.append(hd);
+    const bd = el('tbody'); rows.slice(i, i + per).forEach((r) => { const tr = el('tr'); r.forEach((c) => { const td = el('td'); if (c instanceof Node) td.append(c); else td.textContent = c == null ? '—' : String(c); tr.append(td); }); bd.append(tr); });
+    if (!rows.length) { const tr = el('tr'); const td = el('td', 'لا بيانات.', 'mut'); td.colSpan = heads.length; tr.append(td); bd.append(tr); }
+    t.append(bd); b.append(t); out.push(b);
+  }
+  return out;
+}
+const fullD = (iso) => { if (!iso) return '—'; const g = gShort(iso) + (iso.slice(0, 4) === String(S.year) ? ' ' + S.year : ''); if (S.cal === 'g' || !HF) return g; if (S.cal === 'h') return hijri(iso); return `${g} · ${hijri(iso)}`; };
+function psSecLegend() { const lg = el('div', null, 'legend'); SECTIONS.forEach((s) => { const x = el('span', s.name); x.style.setProperty('--sw', scol(s.id)); lg.append(x); }); return lg; }
+function buildSheet(kind) {
+  const root = $('print-root'); root.replaceChildren(); const ps = el('div', null, 'ps'); root.append(ps); ROWH = 48;
+  try { fillSheet(kind, ps); } finally { ROWH = 28; }
+  return tintSheet(ps);
+}
+function fillSheet(kind, ps) {
+  const stamp = `التقويم: ${CAL_LABEL[S.cal]} · أُعدّ في ${fullD(todayISO)}`;
+  if (kind === 'year') {
+    const head = psHead(kind, `${S.projects.length} مشروعاً موزعة على الأقسام · ${stamp}`); ps.append(head);
+    const tl = el('div', null, 'tl'); renderTimeline(tl); const tb = el('div', null, 'ps-block'); tb.append(tl, psSecLegend(), el('p', 'الإطار المتقطع: بانتظار الاتفاق · الخط المنقّط: يوم العيد · رمضان وذو الحجة مظللان في صف الهجري.', 'note')); ps.append(tb);
+    const rows = S.projects.filter((p) => p.start).sort(byStart).map((p) => [`الربع ${QN[Math.max(1, Math.min(4, qOf(p.start) || 1)) - 1]}`, p.name, secTag(p.section), fullD(p.start), fullD(p.end), p.status || 'مخطط']);
+    ps.append(...psTable(['الربع', 'المشروع', 'القسم', 'من', 'إلى', 'الحالة'], rows, 'المشاريع حسب الربع'));
+  } else if (kind === 'quarters') {
+    const secName = S.annualSec ? SEC[S.annualSec].long : 'كل الأقسام';
+    ps.append(psHead(kind, `${secName} · ${stamp}`));
+    const qb = el('div', null, 'ps-block'); const qs = el('div', null, 'quarters'); qs.innerHTML = ''; 
+    const src = $('quarters').cloneNode(true); src.querySelectorAll('.btn').forEach((b) => b.remove());
+    qs.append(...src.children); qb.append(qs, psSecLegend()); ps.append(qb);
+  } else {
+    const nf = S.projects.filter((p) => p.section === 'nfhm').sort(byStart); const sc = schoolSorted();
+    ps.append(psHead(kind, `الفصول والإجازات ومشاريع نفهمه صح · ${stamp}`));
+    const tb = el('div', null, 'ps-block'); const tl = el('div', null, 'tl'); tb.append(tl);
+    const rF = (S.schoolMeta && S.schoolMeta.from) || (sc[0] && sc[0].start) || `${S.year}-01-01`;
+    const rT = (S.schoolMeta && S.schoolMeta.to) || `${S.year}-12-31`;
+    const cls = (s) => [s.kind === 'break' ? 'brk' : '', s.est ? 'pending' : ''].filter(Boolean).join(' ');
+    rangeTimeline(tl, rF, rT, [
+      { label: 'الفصول الدراسية', color: SKC.term, items: sc.filter((s) => s.kind === 'term' || s.kind === 'exam').map((s) => ({ name: s.name, start: s.start, end: s.end, cls: cls(s), color: SKC[s.kind] })) },
+      { label: 'الإجازات', color: SKC.break, items: sc.filter((s) => s.kind === 'break' || s.kind === 'event').map((s) => ({ name: s.name, start: s.start, end: s.end, cls: cls(s), color: SKC[s.kind] })) },
+      { label: 'مشاريع نفهمه صح', color: 'var(--s-nfhm)', empty: 'لا مشاريع بعد', items: nf.map((p) => ({ name: p.name, start: p.start, end: p.end, cls: p.status === 'بانتظار الاتفاق' ? 'pending' : '' })) },
+    ]);
+    tl.style.minWidth = '0';
+    const lg = $('sch-legend').cloneNode(true); lg.removeAttribute('id'); tb.append(lg); ps.append(tb);
+    const rows = sc.filter((s) => overlap(s.start, s.end || s.start, rF, rT)).map((s) => [s.name + (s.est ? ' (تقديري)' : ''), SK[s.kind] || '—', fullD(s.start), s.end && s.end !== s.start ? fullD(s.end) : '—', s.end && s.end !== s.start ? days(s.start, s.end) + ' يوماً' : 'يوم واحد']);
+    ps.append(...psTable(['الفترة', 'النوع', 'من', 'إلى', 'المدة'], rows, 'الفصول والإجازات'));
+    ps.append(...psTable(['المشروع', 'من', 'إلى', 'الحالة'], nf.map((p) => [p.name, fullD(p.start), fullD(p.end), p.status || 'مخطط']), 'فترات نفهمه صح'));
+    const conf = []; nf.forEach((p) => breaksHit(p.start, p.end).forEach((b) => conf.push(`«${p.name}» يتقاطع مع ${b.name} (${dShort(b.start)} – ${dShort(b.end)}).`)));
+    if (conf.length) { const cb = el('div', null, 'ps-block'); cb.append(el('h2', 'تعارضات مع الإجازات')); conf.forEach((t) => cb.append(el('div', t, 'conf'))); ps.append(cb); }
+    if (S.schoolMeta && S.schoolMeta.source) { const sb = el('div', null, 'ps-block'); sb.append(el('p', S.schoolMeta.source, 'note')); ps.append(sb); }
+  }
+  return ps;
+}
+function tintSheet(ps) {
+  // the canvas renderer cannot read color-mix(); give bars and Hijri highlights plain tints
+  ps.querySelectorAll('.bar, .hm.hot').forEach((b) => {
+    const c = (getComputedStyle(b).getPropertyValue('--sc') || '').trim() || '#B07F14';
+    const hex = /^#[0-9a-f]{6}$/i.test(c) ? c : '#6F7584';
+    if (b.classList.contains('hm')) { b.style.background = '#B07F1429'; return; }
+    b.style.background = hex + (b.classList.contains('brk') ? '1F' : '38'); b.style.borderColor = hex;
+  });
+  ps.querySelectorAll('button').forEach((b) => { b.disabled = false; b.tabIndex = -1; });
+  return ps;
+}
+const LIBS = { h2c: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', pdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js' };
+const libP = {};
+function loadLib(k) { return libP[k] || (libP[k] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = LIBS[k]; s.onload = res; s.onerror = () => { libP[k] = null; rej(new Error('lib')); }; document.head.append(s); })); }
+async function snap(node) { return window.html2canvas(node, { scale: 2, backgroundColor: '#FFFFFF', logging: false, useCORS: true, windowWidth: 1400 }); }
+async function makePdf(ps) {
+  await Promise.all([loadLib('h2c'), loadLib('pdf')]); if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+  const W = 297, H = 210, M = 10, cw = W - 2 * M, ch = H - 2 * M - 6; let y = M, page = 1;
+  const footer = () => { doc.setFontSize(8); doc.setTextColor(120); doc.text(String(page), W / 2, H - 5, { align: 'center' }); };
+  const head = ps.querySelector('.ps-head').parentNode;
+  for (const b of [...ps.children]) {
+    const c = await snap(b); const h = c.height * cw / c.width;
+    if (h <= ch) { if (y + h > M + ch && y > M) { footer(); doc.addPage(); page++; y = M; } doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', M, y, cw, h); y += h + 4; continue; }
+    // taller than a page: slice it
+    const sliceH = Math.floor(c.width * ch / cw); for (let o = 0; o < c.height; o += sliceH) { if (y > M) { footer(); doc.addPage(); page++; y = M; } const part = document.createElement('canvas'); part.width = c.width; part.height = Math.min(sliceH, c.height - o); part.getContext('2d').drawImage(c, 0, -o); const ph = part.height * cw / part.width; doc.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', M, y, cw, ph); y += ph + 4; }
+  }
+  footer(); void head; return doc.output('blob');
+}
+async function makePng(ps) { await loadLib('h2c'); if (document.fonts && document.fonts.ready) await document.fonts.ready; const c = await snap(ps); return new Promise((r) => c.toBlob(r, 'image/png')); }
+function openExport(kind) {
+  const m = $('modal'); m.replaceChildren();
+  const h = el('h2', 'طباعة أو تحميل: ' + EXPORTS[kind].title()); h.id = 'mo-title'; m.append(h);
+  m.append(el('p', `يُصدَّر بالتقويم المختار الآن (${CAL_LABEL[S.cal]})${kind === 'quarters' && S.annualSec ? ' وبفلتر «' + SEC[S.annualSec].name + '»' : ''}. لتغييره بدّل التقويم من أعلى الصفحة قبل التصدير.`, 'note'));
+  const st = el('p', '', 'note'); st.setAttribute('role', 'status');
+  const row = el('div', null, 'controls');
+  const mk = (t, cls, fn) => { const b = el('button', t, 'btn' + (cls ? ' ' + cls : '')); b.type = 'button'; b.addEventListener('click', fn); row.append(b); return b; };
+  const busy = (on, t) => { row.querySelectorAll('button').forEach((b) => { b.disabled = on; }); st.textContent = t || ''; };
+  const save = async (ext, maker) => {
+    if (!S.dl) { st.textContent = 'التحميل غير متاح في هذا العرض. افتح الصفحة من Claude على الويب أو تطبيق الكمبيوتر.'; return; }
+    busy(true, 'جاري تجهيز الملف…');
+    try { const ps = buildSheet(kind); const blob = await maker(ps); await S.dl.save({ filename: `${EXPORTS[kind].file()}.${ext}`, data: blob }); busy(false, 'تم حفظ الملف.'); }
+    catch (e) { busy(false, e && e.code === 'declined' ? 'أُلغي الحفظ.' : e && e.message === 'lib' ? 'تعذر تحميل أداة التصدير. تحقق من الاتصال وأعد المحاولة.' : 'تعذر تجهيز الملف' + (e && e.message ? ': ' + e.message : '.')); }
+    finally { $('print-root').replaceChildren(); }
+  };
+  mk('تحميل PDF', 'primary', () => save('pdf', makePdf));
+  mk('تحميل صورة PNG', '', () => save('png', makePng));
+  mk('طباعة', '', () => { buildSheet(kind); document.body.classList.add('printing'); const done = () => { document.body.classList.remove('printing'); $('print-root').replaceChildren(); window.removeEventListener('afterprint', done); }; window.addEventListener('afterprint', done); try { window.print(); } catch (e) { done(); st.textContent = 'الطباعة المباشرة غير متاحة هنا. حمّل PDF ثم اطبعه.'; } setTimeout(() => { if (document.body.classList.contains('printing')) done(); }, 60000); });
+  mk('إغلاق', '', closeModal);
+  m.append(row, st, el('p', 'إذا لم تظهر نافذة الطباعة، حمّل PDF ثم اطبعه من جهازك. الصفحة مهيأة لورق A4 بالعرض.', 'note'));
+  $('modal-ov').hidden = false; document.body.style.overflow = 'hidden'; setTimeout(() => row.firstChild.focus(), 0);
+}
+document.addEventListener('click', (e) => { const x = e.target.closest('[data-export]'); if (x) openExport(x.dataset.export); });
+
+// ---------- render all
+function syncCal() { document.querySelectorAll('#calseg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.c === S.cal))); }
+$('calseg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.cal = b.dataset.c; try { localStorage.setItem('ihtiwa-cal', S.cal); } catch (er) {} syncCal(); renderAll(); });
+syncCal();
+function applyEdit() { document.querySelectorAll('.edit-only').forEach((x) => { x.hidden = !S.canEdit; }); }
+function renderAll() {
+  $('h-title').textContent = 'احتواء';
+  $('sub').textContent = `خطة ${S.year}: ${S.projects.length} مشروعاً، ${S.tasks.length} مهمة، ${S.committees.length} لجنة` + (S.canEdit ? '' : ' · وضع العرض');
+  renderHome(); renderAnnual(); renderOps(); renderProjects(); renderVol(); renderCom(); applyEdit();
+  if (S.openProject) renderDrawer();
+}
+let rq = 0; const schedule = () => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; renderAll(); }); };
+
+// ---------- boot
+(function boot() {
+  try { $('today-chip').textContent = 'اليوم ' + gShort(todayISO) + (HF ? ' · ' + hijri(todayISO) : ''); } catch (e) {}
+  const h = (location.hash || '').slice(1); if (['home', 'annual', 'ops', 'projects', 'vol', 'com'].includes(h)) setTab(h);
+  if (SEC[h]) { S.projSec = h; setTab('projects'); }
+  applyEdit(); renderAll();
+  $('home-kpis').replaceChildren(el('div', 'جاري تحميل الخطة…', 'note'));
+  if (!window.claude || !window.claude.use) { say('هذه الصفحة تعمل داخل Claude فقط، حيث تُحفظ الخطة وتُشارك مع الفريق.', true); return; }
+  (async () => {
+    const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+    if (!db) { say('تعذر الوصول إلى بيانات الخطة. سجّل الدخول أو اطلب من الإدارة مشاركة الصفحة معك.', true); return; }
+    S.db = db; S.canEdit = user ? await user.canEdit() : false;
+    claude.use('downloads').then((d) => { S.dl = d; }).catch(() => {});
+    const onErr = (e) => { if (e && e.code !== 'revoked') say('انقطع تحديث البيانات. أعد فتح الصفحة.', true); };
+    const sub = (name) => db.collection(name).onSnapshot((snap) => { S[name] = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.loaded[name] = true; schedule(); }, onErr);
+    ['projects', 'tasks', 'committees', 'goals', 'school', 'quarters'].forEach(sub);
+    db.doc('meta/school').onSnapshot((d) => { S.schoolMeta = d.exists ? d.data() : null; schedule(); }, onErr);
+    db.doc('meta/snapshot').onSnapshot((d) => { S.snap = d.exists ? d.data() : null; schedule(); }, onErr);
+    db.doc('meta/settings').onSnapshot((d) => { if (d.exists) { const v = d.data(); S.year = v.year || S.year; S.regUrl = v.regUrl || ''; } schedule(); }, onErr);
+  })();
+})();
+})();
+</script>
+
+
+</body></html>
