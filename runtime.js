@@ -98,7 +98,7 @@
     use: function (name) {
       return ready.then(function () {
         if (name === 'db') return makeDb();
-        if (name === 'user') return { canEdit: function () { return Promise.resolve(IHT.role === 'admin'); }, isOwner: function () { return Promise.resolve(IHT.role === 'admin'); }, me: function () { return Promise.resolve({ name: IHT.email }); } };
+        if (name === 'user') return { canEdit: function () { return Promise.resolve(IHT.role === 'admin'); }, isOwner: function () { return Promise.resolve(IHT.role === 'admin'); }, me: function () { return Promise.resolve({ name: IHT.email }); }, id: function () { return Promise.resolve(IHT.email); } };
         if (name === 'downloads') return makeDownloads();
         return null; // mcp and others are not available outside Claude
       });
